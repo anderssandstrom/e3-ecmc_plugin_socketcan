@@ -1,0 +1,3 @@
+[submodule "ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/CANopenNode"]
+	path = ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/CANopenNode
+	url = https://github.com/anderssandstrom/CANopenNode.git
