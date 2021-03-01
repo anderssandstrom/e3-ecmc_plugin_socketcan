@@ -41,6 +41,10 @@ static int    lastEcmcError   = 0;
 static char*  lastConfStr     = NULL;
 static int    alreadyLoaded   = 0;
 
+
+static int    socketId = -1;
+struct can_frame frame;
+
 /** Optional. 
  *  Will be called once after successfull load into ecmc.
  *  Return value other than 0 will be considered error.
@@ -57,28 +61,28 @@ int canConstruct(char *configStr)
   lastConfStr = strdup(configStr);
 
 
-	int s;
+	
 	int nbytes;
 	struct sockaddr_can addr;
-	struct can_frame frame;
+
 	struct ifreq ifr;
 
 	const char *ifname = "vcan0";
 
-	if((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) == -1) {
+	if((socketId = socket(PF_CAN, SOCK_RAW, CAN_RAW)) == -1) {
 		perror("Error while opening socket");
 		return -1;
 	}
 
 	strcpy(ifr.ifr_name, ifname);
-	ioctl(s, SIOCGIFINDEX, &ifr);
+	ioctl(socketId, SIOCGIFINDEX, &ifr);
 	
 	addr.can_family  = AF_CAN;
 	addr.can_ifindex = ifr.ifr_ifindex;
 
 	printf("%s at index %d\n", ifname, ifr.ifr_ifindex);
 
-	if(bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+	if(bind(socketId, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 		perror("Error in socket bind");
 		return -2;
 	}
@@ -88,7 +92,7 @@ int canConstruct(char *configStr)
 	frame.data[0] = 0x11;
 	frame.data[1] = 0x22;
 
-	nbytes = write(s, &frame, sizeof(struct can_frame));
+	nbytes = write(socketId, &frame, sizeof(struct can_frame));
 
 	printf("Wrote %d bytes\n", nbytes);
 	
@@ -113,8 +117,30 @@ void canDestruct(void)
  *  Return value other than 0 will be considered to be an error code in ecmc.
  **/
 int canRealtime(int ecmcError)
-{ 
+{     
+
+	frame.can_id  = 0x123;
+	frame.can_dlc = 2;
+	frame.data[0] = frame.data[0]+1;
+	frame.data[1] = frame.data[1]+1;
+
+	int nbytes = write(socketId, &frame, sizeof(struct can_frame));
+	printf("\nWrote %d bytes\n", nbytes);
+
+  // NOTE read is BLOCKING so need to start separate thread
+  struct can_frame rxmsg;      
+  read(socketId, &rxmsg, sizeof(rxmsg));  
+  printf("\n0x%02X", rxmsg.can_id);
+  printf(" [%d]", rxmsg.can_dlc);
+  for(int i=0; i<rxmsg.can_dlc; i++ ) {
+    printf(" 0x%02X", rxmsg.data[i]);
+  }
+
   lastEcmcError = ecmcError;
+
+
+
+
   return 0;
 }
 
