@@ -53,3 +53,10 @@ echo "-" > od1_storage
 echo "-" > od1_storage_auto
 ./canopend vcan0 -i 1 -c "stdio" -s od1_storage -a od1_storage_auto
 
+ 
+
+
+
+# EDSEditor (windows)
+## install mono
+sudo apt-get install mono-complete
