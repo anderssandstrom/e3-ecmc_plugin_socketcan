@@ -65,8 +65,10 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   // Init
   cfgCanIFStr_ = NULL;
   cfgDbgMode_  = 0;
+  cfgAutoConnect_ = 1;
   destructs_   = 0;
   socketId_    = -1;
+  connected_   = 0;
   memset(&ifr_,0,sizeof(struct ifreq));
   memset(&rxmsg_,0,sizeof(struct can_frame));
   memset(&txmsg_,0,sizeof(struct can_frame));
@@ -83,8 +85,11 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_read, this) == NULL) {
     throw std::runtime_error("Error: Failed create worker thread.");
   }
-  
-  initCAN();
+
+  if(cfgAutoConnect_) {
+    connect();
+  }
+
   initAsyn();
 }
 
@@ -115,6 +120,12 @@ void ecmcSocketCAN::parseConfigStr(char *configStr) {
         cfgDbgMode_ = atoi(pThisOption);
       }
       
+      // ECMC_PLUGIN_CONNECT_OPTION_CMD (1/0)
+      if (!strncmp(pThisOption, ECMC_PLUGIN_CONNECT_OPTION_CMD, strlen(ECMC_PLUGIN_CONNECT_OPTION_CMD))) {
+        pThisOption += strlen(ECMC_PLUGIN_DBG_PRINT_OPTION_CMD);
+        cfgAutoConnect_ = atoi(pThisOption);
+      }
+
       // ECMC_PLUGIN_IF_OPTION_CMD (Source string)
       else if (!strncmp(pThisOption, ECMC_PLUGIN_IF_OPTION_CMD, strlen(ECMC_PLUGIN_IF_OPTION_CMD))) {
         pThisOption += strlen(ECMC_PLUGIN_IF_OPTION_CMD);
@@ -130,7 +141,7 @@ void ecmcSocketCAN::parseConfigStr(char *configStr) {
   }
 }
 
-void ecmcSocketCAN::initCAN(){
+void ecmcSocketCAN::connect() {
 
 	if((socketId_ = socket(PF_CAN, SOCK_RAW, CAN_RAW)) == -1) {
     throw std::runtime_error( "Error while opening socket.");		
@@ -147,8 +158,13 @@ void ecmcSocketCAN::initCAN(){
 
 	if(bind(socketId_, (struct sockaddr *)&addr_, sizeof(addr_)) == -1) {		
     throw std::runtime_error( "Error in socket bind.");
-    return;		
+    return;
 	}
+  connected_ = 1;
+}
+
+int ecmcSocketCAN::getConnected() {
+  return connected_;
 }
 
 // Read socket worker

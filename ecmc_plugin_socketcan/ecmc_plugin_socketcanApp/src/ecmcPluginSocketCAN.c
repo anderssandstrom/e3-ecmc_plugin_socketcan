@@ -153,10 +153,14 @@ int canEnterRT(){
 int canExitRT(void){
   return 0;
 }
+// Plc function for connect to can
+double can_connect() {
+  return (double)connectSocketCAN();
+}
 
-// Plc function for clear of buffers
-double can_clear(double index) {
-  return (double)0;
+// Plc function for connected to connected
+double can_connected() {
+  return (double)getSocketCANConnectd();
 }
 
 // Register data for plugin so ecmc know what to use
@@ -168,7 +172,10 @@ struct ecmcPluginData pluginDataDef = {
   // Description
   .desc = "SocketCAN plugin for use with ecmc.",
   // Option description
-  .optionDesc = "", 
+  .optionDesc = "\n    "ECMC_PLUGIN_DBG_PRINT_OPTION_CMD"<1/0>    : Enables/disables printouts from plugin, default = disabled (=0).\n"
+                "    "ECMC_PLUGIN_IF_OPTION_CMD"<if name>         : Sets can interface (example: can0, vcan0..).\n"
+                "    "ECMC_PLUGIN_CONNECT_OPTION_CMD"<1/0>        : Auto connect to if at startup, default = autoconnect (=1).\n"
+                ,
   // Plugin version
   .version = ECMC_EXAMPLE_PLUGIN_VERSION,
   // Optional construct func, called once at load. NULL if not definded.
@@ -183,17 +190,17 @@ struct ecmcPluginData pluginDataDef = {
   .realtimeExitFnc = canExitRT,
   // PLC funcs
   .funcs[0] =
-      { /*----fft_clear----*/
+      { /*----can_connect----*/
         // Function name (this is the name you use in ecmc plc-code)
-        .funcName = "can_clear",
+        .funcName = "can_connect",
         // Function description
-        .funcDesc = "double can_clear(index) : Clear/reset can[index].",
+        .funcDesc = "double can_connect() : Connect to can if (from config str).",
         /**
         * 7 different prototypes allowed (only doubles since reg in plc).
         * Only funcArg${argCount} func shall be assigned the rest set to NULL.
         **/
-        .funcArg0 = NULL,
-        .funcArg1 = can_clear,
+        .funcArg0 = can_connect,
+        .funcArg1 = NULL,
         .funcArg2 = NULL,
         .funcArg3 = NULL,
         .funcArg4 = NULL,
@@ -205,7 +212,30 @@ struct ecmcPluginData pluginDataDef = {
         .funcArg10 = NULL,
         .funcGenericObj = NULL,
       },
-  .funcs[1] = {0},  // last element set all to zero..
+  .funcs[1] =
+      { /*----can_connected----*/
+        // Function name (this is the name you use in ecmc plc-code)
+        .funcName = "can_connected",
+        // Function description
+        .funcDesc = "double can_connected() : Connected to can if.",
+        /**
+        * 7 different prototypes allowed (only doubles since reg in plc).
+        * Only funcArg${argCount} func shall be assigned the rest set to NULL.
+        **/
+        .funcArg0 = can_connected,
+        .funcArg1 = NULL,
+        .funcArg2 = NULL,
+        .funcArg3 = NULL,
+        .funcArg4 = NULL,
+        .funcArg5 = NULL,
+        .funcArg6 = NULL,
+        .funcArg7 = NULL,
+        .funcArg8 = NULL,
+        .funcArg9 = NULL,
+        .funcArg10 = NULL,
+        .funcGenericObj = NULL,
+      },
+  .funcs[2] = {0},  // last element set all to zero..
   // PLC consts
   .consts[0] = {0}, // last element set all to zero..
 };

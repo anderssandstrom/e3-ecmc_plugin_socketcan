@@ -27,7 +27,17 @@ extern "C" {
  *
  *  \return 0 if success or otherwise an error code.\n
  */
-int         createSocketCAN(char *configStr);
+int createSocketCAN(char *configStr);
+
+/** \brief Connect to SocketCAN interface\n
+ */
+
+int connectSocketCAN();
+
+/** \brief Connected to can interface\n
+ */
+
+int getSocketCANConnectd();
 
 /** \brief Delete SocketCAN object\n
  *

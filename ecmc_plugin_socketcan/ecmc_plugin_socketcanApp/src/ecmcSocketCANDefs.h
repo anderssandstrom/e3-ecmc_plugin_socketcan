@@ -17,6 +17,7 @@
 // Options
 #define ECMC_PLUGIN_DBG_PRINT_OPTION_CMD   "DBG_PRINT="
 #define ECMC_PLUGIN_IF_OPTION_CMD          "IF="
+#define ECMC_PLUGIN_CONNECT_OPTION_CMD     "CONNECT="
 
 /** Just one error code in "c" part of plugin 
 (error handled with exceptions i c++ part) */

@@ -49,6 +49,34 @@ int createSocketCAN(char* configStr) {
   return 0;
 }
 
+int connectSocketCAN() {
+  if(can){
+      try {       
+        can->connect();
+    }
+    catch(std::exception& e) {
+      printf("Exception: %s.\n",e.what());
+      return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
+    }
+  }
+  else {
+    return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
+  }
+}
+
+int getSocketCANConnectd() {
+  if(can){
+    try {       
+      return can->getConnected();      
+    }
+    catch(std::exception& e) {
+      printf("Exception: %s.\n",e.what());
+      return 0;
+    }
+  }
+  return 0;
+}
+
 void deleteSocketCAN() {
   if(can) {
     delete (can);
