@@ -56,7 +56,17 @@ class ecmcSocketCAN : public asynPortDriver {
   virtual asynStatus    readFloat64(asynUser *pasynUser, epicsFloat64 *value);
   void                  connectExternal();  
   int                   getConnected();
-  int                   writeCAN();   // Add args later
+  void                  writeCAN( uint32_t canId,
+                                  uint8_t len,
+                                  uint8_t data0,
+                                  uint8_t data1,
+                                  uint8_t data2,
+                                  uint8_t data3,
+                                  uint8_t data4,
+                                  uint8_t data5,
+                                  uint8_t data6,
+                                  uint8_t data7);
+
  private:
   void                  parseConfigStr(char *configStr);
   void                  initAsyn();

@@ -207,7 +207,7 @@ void ecmcSocketCAN::doReadWorker() {
 
     if(cfgDbgMode_) {
       // Simulate candump printout
-      printf("\n0x%02X", rxmsg_.can_id);
+      printf("\nread 0x%02X", rxmsg_.can_id);
       printf(" [%d]", rxmsg_.can_dlc);
       for(int i=0; i<rxmsg_.can_dlc; i++ ) {
         printf(" 0x%02X", rxmsg_.data[i]);
@@ -229,16 +229,42 @@ void ecmcSocketCAN::doConnectWorker() {
   }
 }
 
-// Test can write function
-int ecmcSocketCAN::writeCAN() {
-  struct can_frame frame;
-	txmsg_.can_id  = 0x123;
-	txmsg_.can_dlc = 2;
-	txmsg_.data[0] = frame.data[0]+1;
-	txmsg_.data[1] = frame.data[1]+1;
+// Test can write function (simple if for plc func)
+void ecmcSocketCAN::writeCAN( uint32_t canId,
+                             uint8_t len,
+                             uint8_t data0,
+                             uint8_t data1,
+                             uint8_t data2,
+                             uint8_t data3,
+                             uint8_t data4,
+                             uint8_t data5,
+                             uint8_t data6,
+                             uint8_t data7) {
+	txmsg_.can_id  = canId;
+	txmsg_.can_dlc = len;
+	txmsg_.data[0] = data0;
+	txmsg_.data[1] = data1;
+  txmsg_.data[2] = data2;
+  txmsg_.data[3] = data3;
+  txmsg_.data[4] = data4;
+  txmsg_.data[5] = data5;
+  txmsg_.data[6] = data6;
+  txmsg_.data[7] = data7;
+
   // Maybe need to add the size to write here.. if struct is not full, hmm?!
 	int nbytes = write(socketId_, &txmsg_, sizeof(struct can_frame));
-	printf("\nWrote %d bytes\n", nbytes);
+  if (nbytes!=len) {
+    throw std::runtime_error( "Error in write.");
+  }
+
+  if(cfgDbgMode_) {	  
+    // Simulate candump printout
+    printf("\nwrite 0x%02X", txmsg_.can_id);
+    printf(" [%d]", txmsg_.can_dlc);
+    for(int i=0; i<txmsg_.can_dlc; i++ ) {
+      printf(" 0x%02X", txmsg_.data[i]);
+    }
+  }
 }
 
 void ecmcSocketCAN::initAsyn() {

@@ -39,11 +39,24 @@ int connectSocketCAN();
 
 int getSocketCANConnectd();
 
+
+/** \brief Write CAN
+ */
+int  writeSocketCAN( double canId,
+                     double len,
+                     double data0,
+                     double data1,
+                     double data2,
+                     double data3,
+                     double data4,
+                     double data5,
+                     double data6,
+                     double data7);
+
 /** \brief Delete SocketCAN object\n
  *
  * Should be called when destructs.\n
  */
-
 void deleteSocketCAN();
 
 # ifdef __cplusplus
