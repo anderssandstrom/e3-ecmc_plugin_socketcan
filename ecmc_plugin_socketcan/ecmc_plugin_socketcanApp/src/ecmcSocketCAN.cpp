@@ -63,6 +63,7 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
                    {
   // Init
   cfgCanIFStr_ = NULL;
+  cfgDbgMode_  = 0;
   destructs_   = 0;
   socketId_    = -1;
   memset(&ifr_,0,sizeof(struct ifreq));
@@ -108,10 +109,10 @@ void ecmcSocketCAN::parseConfigStr(char *configStr) {
       }
       
       // ECMC_PLUGIN_DBG_PRINT_OPTION_CMD (1/0)
-      /*if (!strncmp(pThisOption, ECMC_PLUGIN_DBG_PRINT_OPTION_CMD, strlen(ECMC_PLUGIN_DBG_PRINT_OPTION_CMD))) {
+      if (!strncmp(pThisOption, ECMC_PLUGIN_DBG_PRINT_OPTION_CMD, strlen(ECMC_PLUGIN_DBG_PRINT_OPTION_CMD))) {
         pThisOption += strlen(ECMC_PLUGIN_DBG_PRINT_OPTION_CMD);
         cfgDbgMode_ = atoi(pThisOption);
-      } */
+      }
       
       // ECMC_PLUGIN_IF_OPTION_CMD (Source string)
       else if (!strncmp(pThisOption, ECMC_PLUGIN_IF_OPTION_CMD, strlen(ECMC_PLUGIN_IF_OPTION_CMD))) {
@@ -124,7 +125,7 @@ void ecmcSocketCAN::parseConfigStr(char *configStr) {
     free(pOptions);
   }
   if(!cfgCanIFStr_) { 
-    throw std::invalid_argument( "Data source not defined.");
+    throw std::invalid_argument( "CAN interface not defined.");
   }
 }
 

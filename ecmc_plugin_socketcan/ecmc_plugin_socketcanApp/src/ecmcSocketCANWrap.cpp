@@ -27,7 +27,7 @@
 static ecmcSocketCAN*  can = NULL;
 static char            portNameBuffer[ECMC_PLUGIN_MAX_PORTNAME_CHARS];
 
-int createFFT(char* configStr) {
+int createSocketCAN(char* configStr) {
 
   // create new ecmcFFT object
 

@@ -49,8 +49,6 @@ class ecmcSocketCAN : public asynPortDriver {
 
   virtual asynStatus    writeInt32(asynUser *pasynUser, epicsInt32 value);
   virtual asynStatus    readInt32(asynUser *pasynUser, epicsInt32 *value);
-  virtual asynStatus    readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
-                                         size_t nElements, size_t *nIn);
   virtual asynStatus    readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
                                       size_t nElements, size_t *nIn);
   virtual asynStatus    readFloat64(asynUser *pasynUser, epicsFloat64 *value);
@@ -62,6 +60,7 @@ class ecmcSocketCAN : public asynPortDriver {
   void                  initCAN();
   static std::string    to_string(int value);
   char*                 cfgCanIFStr_;   // Config: can interface can0, vcan0..
+  int                   cfgDbgMode_;
   int                   destructs_;
   struct can_frame      rxmsg_;
   struct can_frame      txmsg_;
