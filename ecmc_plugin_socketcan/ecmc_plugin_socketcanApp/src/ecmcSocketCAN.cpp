@@ -61,12 +61,14 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
                    0, /* Default priority */
                    0) /* Default stack size */
                    {
+  // Init
   cfgCanIFStr_ = NULL;
   destructs_   = 0;
   socketId_    = -1;
-  memset(&ifr_,0,sizeof(ifr_));
+  memset(&ifr_,0,sizeof(struct ifreq));
   memset(&rxmsg_,0,sizeof(struct can_frame));
   memset(&txmsg_,0,sizeof(struct can_frame));
+  memset(&addr_,0,sizeof(struct sockaddr_can));
   
   parseConfigStr(configStr); // Assigns all configs
   // Check valid nfft
@@ -113,7 +115,7 @@ void ecmcSocketCAN::parseConfigStr(char *configStr) {
       
       // ECMC_PLUGIN_IF_OPTION_CMD (Source string)
       else if (!strncmp(pThisOption, ECMC_PLUGIN_IF_OPTION_CMD, strlen(ECMC_PLUGIN_IF_OPTION_CMD))) {
-        pThisOption += strlen(ECMC_PLUGIN_IF_OPTION_CMD)destructs_;
+        pThisOption += strlen(ECMC_PLUGIN_IF_OPTION_CMD);
         cfgCanIFStr_=strdup(pThisOption);
       }
 
@@ -129,21 +131,21 @@ void ecmcSocketCAN::parseConfigStr(char *configStr) {
 void ecmcSocketCAN::initCAN(){
 
 	if((socketId_ = socket(PF_CAN, SOCK_RAW, CAN_RAW)) == -1) {
-     throw std::runtime_error( "Error while opening socket.");		
-		return -1;
+    throw std::runtime_error( "Error while opening socket.");		
+		return;
 	}
 
-	strcpy(ifr.ifr_name, cfgCanIFStr_);
-	ioctl(socketId, SIOCGIFINDEX, &ifr_);
+	strcpy(ifr_.ifr_name, cfgCanIFStr_);
+	ioctl(socketId_, SIOCGIFINDEX, &ifr_);
 	
-	addr.can_family  = AF_CAN;
-	addr.can_ifindex = ifr_.ifr_ifindex;
+	addr_.can_family  = AF_CAN;
+	addr_.can_ifindex = ifr_.ifr_ifindex;
 
-	printf("%s at index %d\n", ifname, ifr.ifr_ifindex);
+	printf("%s at index %d\n", cfgCanIFStr_, ifr_.ifr_ifindex);
 
-	if(bind(socketId, (struct sockaddr *)&addr, sizeof(addr)) == -1) {		
+	if(bind(socketId_, (struct sockaddr *)&addr_, sizeof(addr_)) == -1) {		
     throw std::runtime_error( "Error in socket bind.");
-		return -2;
+    return;		
 	}
 }
 
@@ -176,7 +178,8 @@ int ecmcSocketCAN::writeCAN() {
 	txmsg_.can_dlc = 2;
 	txmsg_.data[0] = frame.data[0]+1;
 	txmsg_.data[1] = frame.data[1]+1;
-	int nbytes = write(socketId, &txmsg_, sizeof(struct can_frame));
+  // Maybe need to add the size to write here.. if struct is not full, hmm?!
+	int nbytes = write(socketId_, &txmsg_, sizeof(struct can_frame));
 	printf("\nWrote %d bytes\n", nbytes);
 }
 

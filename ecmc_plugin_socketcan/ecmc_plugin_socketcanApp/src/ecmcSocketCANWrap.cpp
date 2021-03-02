@@ -34,7 +34,7 @@ int createFFT(char* configStr) {
   // create asynport name for new object ()
   memset(portNameBuffer, 0, ECMC_PLUGIN_MAX_PORTNAME_CHARS);
   snprintf (portNameBuffer, ECMC_PLUGIN_MAX_PORTNAME_CHARS,
-            ECMC_PLUGIN_PORTNAME_PREFIX "%d", fftObjCounter);
+            ECMC_PLUGIN_PORTNAME_PREFIX);
   try {
     can = new ecmcSocketCAN(configStr, portNameBuffer);
   }

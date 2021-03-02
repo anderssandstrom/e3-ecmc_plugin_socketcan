@@ -67,8 +67,7 @@ class ecmcSocketCAN : public asynPortDriver {
   struct can_frame      txmsg_;
   struct ifreq          ifr_;
   int                   socketId_;
-
-
+  struct sockaddr_can   addr_;
 };
 
 #endif  /* ECMC_FFT_H_ */
