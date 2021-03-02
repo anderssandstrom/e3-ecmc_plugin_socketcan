@@ -48,6 +48,8 @@ USR_INCLUDES += -I$(where_am_I)$(APPSRC)
 TEMPLATES += $(wildcard $(APPDB)/*.db)
 TEMPLATES += $(wildcard $(APPDB)/*.template)
 SOURCES += $(APPSRC)/ecmcPluginSocketCAN.c
+SOURCES += $(APPSRC)/ecmcSocketCAN.cpp
+SOURCES += $(APPSRC)/ecmcSocketCANWrap.cpp
 
 db:
 

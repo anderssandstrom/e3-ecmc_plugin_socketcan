@@ -23,6 +23,7 @@ extern "C" {
 #include <string.h>
 
 #include "ecmcPluginDefs.h"
+#include "ecmcSocketCANWrap.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,8 +43,8 @@ static char*  lastConfStr     = NULL;
 static int    alreadyLoaded   = 0;
 
 
-static int    socketId = -1;
-struct can_frame frame;
+/*static int    socketId = -1;
+struct can_frame frame;*/
 
 /** Optional. 
  *  Will be called once after successfull load into ecmc.
@@ -57,17 +58,17 @@ int canConstruct(char *configStr)
   }
 
   alreadyLoaded = 1;
-  // create FFT object and register data callback
+  // create SocketCAN object and register data callback
   lastConfStr = strdup(configStr);
+  createSocketCAN(configStr);
 
-
-	
-	int nbytes;
+/*	int nbytes;
 	struct sockaddr_can addr;
 
 	struct ifreq ifr;
 
-	const char *ifname = "vcan0";
+	//const char *ifname = "vcan0";
+  const char *ifname = "can0";
 
 	if((socketId = socket(PF_CAN, SOCK_RAW, CAN_RAW)) == -1) {
 		perror("Error while opening socket");
@@ -91,11 +92,8 @@ int canConstruct(char *configStr)
 	frame.can_dlc = 2;
 	frame.data[0] = 0x11;
 	frame.data[1] = 0x22;
-
-	nbytes = write(socketId, &frame, sizeof(struct can_frame));
-
-	printf("Wrote %d bytes\n", nbytes);
-	
+deleteSocketCANbytes);
+	*/
 
   return 0;
 }
@@ -108,6 +106,7 @@ void canDestruct(void)
   if(lastConfStr){
     free(lastConfStr);
   }
+  deleteSocketCAN();
 }
 
 /** Optional function.
@@ -117,9 +116,9 @@ void canDestruct(void)
  *  Return value other than 0 will be considered to be an error code in ecmc.
  **/
 int canRealtime(int ecmcError)
-{     
+{
 
-	frame.can_id  = 0x123;
+	/*frame.can_id  = 0x123;
 	frame.can_dlc = 2;
 	frame.data[0] = frame.data[0]+1;
 	frame.data[1] = frame.data[1]+1;
@@ -135,12 +134,8 @@ int canRealtime(int ecmcError)
   for(int i=0; i<rxmsg.can_dlc; i++ ) {
     printf(" 0x%02X", rxmsg.data[i]);
   }
-
+*/
   lastEcmcError = ecmcError;
-
-
-
-
   return 0;
 }
 
