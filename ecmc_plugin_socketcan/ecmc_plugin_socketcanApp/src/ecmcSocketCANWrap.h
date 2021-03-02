@@ -36,22 +36,33 @@ int connectSocketCAN();
 
 /** \brief Connected to can interface\n
  */
-
 int getSocketCANConnectd();
 
-
-/** \brief Write CAN
+/** \brief Write all buffered writes to CAN
  */
-int  writeSocketCAN( double canId,
-                     double len,
-                     double data0,
-                     double data1,
-                     double data2,
-                     double data3,
-                     double data4,
-                     double data5,
-                     double data6,
-                     double data7);
+int triggWrites();
+
+/** \brief Busy writing\n
+  */
+int getWriteBusy();
+
+/** \brief Get last error from writes\n
+  */
+int getlastWritesError();
+
+
+/** \brief add CAN frame to write buffer
+ */
+int  addWriteSocketCAN( double canId,
+                        double len,
+                        double data0,
+                        double data1,
+                        double data2,
+                        double data3,
+                        double data4,
+                        double data5,
+                        double data6,
+                        double data7);
 
 /** \brief Delete SocketCAN object\n
  *

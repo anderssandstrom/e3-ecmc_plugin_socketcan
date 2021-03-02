@@ -77,29 +77,67 @@ int getSocketCANConnectd() {
   return 0;
 }
 
-int writeSocketCAN( double canId,
-                    double len,
-                    double data0,
-                    double data1,
-                    double data2,
-                    double data3,
-                    double data4,
-                    double data5,
-                    double data6,
-                    double data7) {
+int getWriteBusy() {
   if(can){
     try {       
-      can->writeCAN((uint32_t) canId,
-                    (uint8_t) len,
-                    (uint8_t) data0,
-                    (uint8_t) data1,
-                    (uint8_t) data2,
-                    (uint8_t) data3,
-                    (uint8_t) data4,
-                    (uint8_t) data5,
-                    (uint8_t) data6,
-                    (uint8_t) data7);
-      return 0;
+      return can->getWriteBusy();
+    }
+    catch(std::exception& e) {
+      printf("Exception: %s.\n",e.what());
+      return 1;
+    }
+  }
+  return 1;
+}
+
+int getlastWritesError() {
+  if(can){
+    try {       
+      return can->getlastWritesError();
+    }
+    catch(std::exception& e) {
+      printf("Exception: %s.\n",e.what());
+      return 1;
+    }
+  }
+  return 1;
+}
+
+int triggWrites() {
+  if(can){
+    try {       
+      return can->triggWrites();      
+    }
+    catch(std::exception& e) {
+      printf("Exception: %s.\n",e.what());
+      return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
+    }
+  }
+  return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
+}
+
+int addWriteSocketCAN( double canId,
+                       double len,
+                       double data0,
+                       double data1,
+                       double data2,
+                       double data3,
+                       double data4,
+                       double data5,
+                       double data6,
+                       double data7) {
+  if(can){
+    try {       
+      return can->addWriteCAN((uint32_t) canId,
+                              (uint8_t) len,
+                              (uint8_t) data0,
+                              (uint8_t) data1,
+                              (uint8_t) data2,
+                              (uint8_t) data3,
+                              (uint8_t) data4,
+                              (uint8_t) data5,
+                              (uint8_t) data6,
+                              (uint8_t) data7);      
     }
     catch(std::exception& e) {
       printf("Exception: %s.\n",e.what());

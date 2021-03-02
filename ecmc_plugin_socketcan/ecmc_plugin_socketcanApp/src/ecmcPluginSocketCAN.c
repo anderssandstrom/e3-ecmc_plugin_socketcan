@@ -163,26 +163,41 @@ double can_connected() {
   return (double)getSocketCANConnectd();
 }
 
-double can_write(double canId,
-                 double len,
-                 double data0,
-                 double data1,
-                 double data2,
-                 double data3,
-                 double data4,
-                 double data5,
-                 double data6,
-                 double data7) {
-  return (double)writeSocketCAN(canId,
-                                len,
-                                data0,
-                                data1,
-                                data2,
-                                data3,
-                                data4,
-                                data5,
-                                data6,
-                                data7);
+double can_write_busy() {
+  return (double)getWriteBusy();
+}
+
+// trigger all writes added to buffer
+double can_trigg_writes() {
+  return (double)triggWrites();
+}
+
+// trigger all writes added to buffer
+double can_last_writes_error() {
+  return (double)getlastWritesError();
+}
+
+// Add frrame to output buffer
+double can_add_write(double canId,
+                     double len,
+                     double data0,
+                     double data1,
+                     double data2,
+                     double data3,
+                     double data4,
+                     double data5,
+                     double data6,
+                     double data7) {
+  return (double)addWriteSocketCAN(canId,
+                                   len,
+                                   data0,
+                                   data1,
+                                   data2,
+                                   data3,
+                                   data4,
+                                   data5,
+                                   data6,
+                                   data7);
 }
 
 // Register data for plugin so ecmc know what to use
@@ -260,9 +275,9 @@ struct ecmcPluginData pluginDataDef = {
   .funcs[2] =
       { /*----can_connected----*/
         // Function name (this is the name you use in ecmc plc-code)
-        .funcName = "can_write",
+        .funcName = "can_add_write",
         // Function description
-        .funcDesc = "double can_write(canId,len,data0..data7) : Write to can interface.",
+        .funcDesc = "double can_add_write(canId,len,data0..data7) : Add write frame to can interface output buffer.",
         /**
         * 7 different prototypes allowed (only doubles since reg in plc).
         * Only funcArg${argCount} func shall be assigned the rest set to NULL.
@@ -277,10 +292,79 @@ struct ecmcPluginData pluginDataDef = {
         .funcArg7 = NULL,
         .funcArg8 = NULL,
         .funcArg9 = NULL,
-        .funcArg10 = can_write,
+        .funcArg10 = can_add_write,
         .funcGenericObj = NULL,
       },
-  .funcs[3] = {0},  // last element set all to zero..
+  .funcs[3] =
+      { /*----can_trigg_writes----*/
+        // Function name (this is the name you use in ecmc plc-code)
+        .funcName = "can_trigg_writes",
+        // Function description
+        .funcDesc = "double can_trigg_writes() : Trigger write of all added frames.",
+        /**
+        * 7 different prototypes allowed (only doubles since reg in plc).
+        * Only funcArg${argCount} func shall be assigned the rest set to NULL.
+        **/
+        .funcArg0 = can_trigg_writes,
+        .funcArg1 = NULL,
+        .funcArg2 = NULL,
+        .funcArg3 = NULL,
+        .funcArg4 = NULL,
+        .funcArg5 = NULL,
+        .funcArg6 = NULL,
+        .funcArg7 = NULL,
+        .funcArg8 = NULL,
+        .funcArg9 = NULL,
+        .funcArg10 = NULL,
+        .funcGenericObj = NULL,
+      },
+  .funcs[4] =
+      { /*----can_write_busy----*/
+        // Function name (this is the name you use in ecmc plc-code)
+        .funcName = "can_write_busy",
+        // Function description
+        .funcDesc = "double can_write_busy() : get can busy writing added frames.",
+        /**
+        * 7 different prototypes allowed (only doubles since reg in plc).
+        * Only funcArg${argCount} func shall be assigned the rest set to NULL.
+        **/
+        .funcArg0 = can_write_busy,
+        .funcArg1 = NULL,
+        .funcArg2 = NULL,
+        .funcArg3 = NULL,
+        .funcArg4 = NULL,
+        .funcArg5 = NULL,
+        .funcArg6 = NULL,
+        .funcArg7 = NULL,
+        .funcArg8 = NULL,
+        .funcArg9 = NULL,
+        .funcArg10 = NULL,
+        .funcGenericObj = NULL,
+      },
+  .funcs[5] =
+      { /*----can_last_writes_error----*/
+        // Function name (this is the name you use in ecmc plc-code)
+        .funcName = "can_last_writes_error",
+        // Function description
+        .funcDesc = "double can_last_writes_error() : get error from last writes.",
+        /**
+        * 7 different prototypes allowed (only doubles since reg in plc).
+        * Only funcArg${argCount} func shall be assigned the rest set to NULL.
+        **/
+        .funcArg0 = can_last_writes_error,
+        .funcArg1 = NULL,
+        .funcArg2 = NULL,
+        .funcArg3 = NULL,
+        .funcArg4 = NULL,
+        .funcArg5 = NULL,
+        .funcArg6 = NULL,
+        .funcArg7 = NULL,
+        .funcArg8 = NULL,
+        .funcArg9 = NULL,
+        .funcArg10 = NULL,
+        .funcGenericObj = NULL,
+      },      
+  .funcs[6] = {0},  // last element set all to zero..
   // PLC consts
   .consts[0] = {0}, // last element set all to zero..
 };

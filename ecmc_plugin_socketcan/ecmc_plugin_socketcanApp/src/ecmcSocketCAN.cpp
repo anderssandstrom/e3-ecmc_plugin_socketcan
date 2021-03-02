@@ -50,6 +50,17 @@ void f_worker_connect(void *obj) {
   canObj->doConnectWorker();
 }
 
+// Start worker for socket read()
+void f_worker_write(void *obj) {
+  if(!obj) {
+    printf("%s/%s:%d: Error: Worker write thread ecmcSocketCAN object NULL..\n",
+            __FILE__, __FUNCTION__, __LINE__);
+    return;
+  }
+  ecmcSocketCAN * canObj = (ecmcSocketCAN*)obj;
+  canObj->doWriteWorker();
+}
+
 /** ecmc ecmcSocketCAN class
  * This object can throw: 
  *    - bad_alloc
@@ -80,11 +91,15 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   destructs_   = 0;
   socketId_    = -1;
   connected_   = 0;
+  writeCmdCounter_ = 0;
+  writeBusy_   = 0;
+  lastWriteSumError_ = 0;
   memset(&ifr_,0,sizeof(struct ifreq));
   memset(&rxmsg_,0,sizeof(struct can_frame));
-  memset(&txmsg_,0,sizeof(struct can_frame));
+  //memset(&txmsg_,0,sizeof(struct can_frame));
+  memset(&txmsgBuffer_,0,sizeof(struct can_frame)*ECMC_CAN_MAX_WRITE_CMDS);
   memset(&addr_,0,sizeof(struct sockaddr_can));
-  
+
   parseConfigStr(configStr); // Assigns all configs
   // Check valid nfft
   if(!cfgCanIFStr_ ) {
@@ -103,6 +118,12 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
     throw std::runtime_error("Error: Failed create worker thread for connect().");
   }
 
+  // Create worker thread for writing socket
+  threadname = "ecmc." ECMC_PLUGIN_ASYN_PREFIX".write";
+  if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_write, this) == NULL) {
+    throw std::runtime_error("Error: Failed create worker thread for write().");
+  }
+
   if(cfgAutoConnect_) {
     connectPrivate();
   }
@@ -113,7 +134,8 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
 ecmcSocketCAN::~ecmcSocketCAN() {
   // kill worker
   destructs_ = 1;  // maybe need todo in other way..
-  //doCalcEvent_.signal();
+  doWriteEvent_.signal();
+  doConnectEvent_.signal();
 }
 
 void ecmcSocketCAN::parseConfigStr(char *configStr) {
@@ -217,56 +239,122 @@ void ecmcSocketCAN::doReadWorker() {
   }
 }
 
-// Read socket worker
+// Connect socket worker
 void ecmcSocketCAN::doConnectWorker() {
 
   while(true) {
     
     if(destructs_) {
-      break;
+      return;
     }
     doConnectEvent_.wait();
+    if(destructs_) {
+      return;
+    }
     connectPrivate();
   }
 }
 
+// Write socket worker
+void ecmcSocketCAN::doWriteWorker() {
+  int errorCode = 0;
+  while(true) {    
+    if(destructs_) {
+      return;
+    }
+
+    doWriteEvent_.wait();
+    if(destructs_) {
+      return;
+    }
+    for(int i=0; i<writeCmdCounter_;i++) {
+      errorCode = writeCAN(&txmsgBuffer_[i]);
+      if(errorCode) {
+        lastWriteSumError_ = errorCode;
+      }
+    }
+    writeCmdCounter_ = 0;
+    writeBusy_ = 0;
+  }
+}
+
 // Test can write function (simple if for plc func)
-void ecmcSocketCAN::writeCAN( uint32_t canId,
-                             uint8_t len,
-                             uint8_t data0,
-                             uint8_t data1,
-                             uint8_t data2,
-                             uint8_t data3,
-                             uint8_t data4,
-                             uint8_t data5,
-                             uint8_t data6,
-                             uint8_t data7) {
-	txmsg_.can_id  = canId;
-	txmsg_.can_dlc = len;
-	txmsg_.data[0] = data0;
-	txmsg_.data[1] = data1;
-  txmsg_.data[2] = data2;
-  txmsg_.data[3] = data3;
-  txmsg_.data[4] = data4;
-  txmsg_.data[5] = data5;
-  txmsg_.data[6] = data6;
-  txmsg_.data[7] = data7;
+int ecmcSocketCAN::addWriteCAN( uint32_t canId,
+                                uint8_t len,
+                                uint8_t data0,
+                                uint8_t data1,
+                                uint8_t data2,
+                                uint8_t data3,
+                                uint8_t data4,
+                                uint8_t data5,
+                                uint8_t data6,
+                                uint8_t data7) {
+  
+  if( writeBusy_) {
+    return ECMC_CAN_ERROR_WRITE_BUSY;
+  }
+
+  if( writeCmdCounter_>=ECMC_CAN_MAX_WRITE_CMDS) {
+    return ECMC_CAN_ERROR_WRITE_FULL;
+  }
+  
+  txmsgBuffer_[writeCmdCounter_].can_id  = canId;
+  txmsgBuffer_[writeCmdCounter_].can_dlc = len;
+  txmsgBuffer_[writeCmdCounter_].data[0] = data0;
+  txmsgBuffer_[writeCmdCounter_].data[1] = data1;
+  txmsgBuffer_[writeCmdCounter_].data[2] = data2;
+  txmsgBuffer_[writeCmdCounter_].data[3] = data3;
+  txmsgBuffer_[writeCmdCounter_].data[4] = data4;
+  txmsgBuffer_[writeCmdCounter_].data[5] = data5;
+  txmsgBuffer_[writeCmdCounter_].data[6] = data6;
+  txmsgBuffer_[writeCmdCounter_].data[7] = data7;
+
+  writeCmdCounter_++;
+  return 0;
+}
+
+int ecmcSocketCAN::getWriteBusy() {
+  return writeBusy_;
+}
+
+int ecmcSocketCAN::getlastWritesError() {
+  return lastWriteSumError_;
+}  
+
+// Trigger all writes
+int ecmcSocketCAN::triggWrites() {
+  if(writeBusy_ || writeCmdCounter_ == 0) {
+    return ECMC_CAN_ERROR_WRITE_BUSY;
+  }
+  writeBusy_= true;
+  lastWriteSumError_ = 0;
+  doWriteEvent_.signal(); // let worker start
+  return 0;
+}
+
+// Test can write
+int ecmcSocketCAN::writeCAN(can_frame *frame){
+
+  if(!frame) {
+    return ECMC_CAN_ERROR_WRITE_NO_DATA;
+  }
 
   // Maybe need to add the size to write here.. if struct is not full, hmm?!
-	int nbytes = write(socketId_, &txmsg_, sizeof(struct can_frame));
+	int nbytes = write(socketId_, frame, sizeof(struct can_frame));
   if (nbytes!= sizeof(struct can_frame)) {
-    throw std::runtime_error( "Error in write.");
+    return ECMC_CAN_ERROR_WRITE_INCOMPLETE;
   }
 
   if(cfgDbgMode_) {	  
     // Simulate candump printout
-    printf("w 0x%03X", txmsg_.can_id);
-    printf(" [%d]", txmsg_.can_dlc);
-    for(int i=0; i<txmsg_.can_dlc; i++ ) {
-      printf(" 0x%02X", txmsg_.data[i]);
+    printf("w 0x%03X", frame->can_id);
+    printf(" [%d]", frame->can_dlc);
+    for(int i=0; i<frame->can_dlc; i++ ) {
+      printf(" 0x%02X", frame->data[i]);
     }
     printf("\n");
   }
+  return 0;
 }
 
 void ecmcSocketCAN::initAsyn() {
