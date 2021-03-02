@@ -24,10 +24,11 @@
 #include "ecmcAsynPortDriverUtils.h"
 #include "epicsThread.h"
 
-
 // New data callback from ecmc
 static int printMissingObjError = 1;
 
+
+// Start worker for socket read()
 void f_worker_read(void *obj) {
   if(!obj) {
     printf("%s/%s:%d: Error: Worker read thread ecmcSocketCAN object NULL..\n",
@@ -160,16 +161,17 @@ void ecmcSocketCAN::doReadWorker() {
     }
 
     // Wait for new CAN frame   
-    read(socketId_, &rxmsg_, sizeof(rxmsg_));  
-    
-    printf("\n0x%02X", rxmsg_.can_id);
-    printf(" [%d]", rxmsg_.can_dlc);
-    for(int i=0; i<rxmsg_.can_dlc; i++ ) {
-      printf(" 0x%02X", rxmsg_.data[i]);
+    read(socketId_, &rxmsg_, sizeof(rxmsg_));
+
+    if(cfgDbgMode_) {
+      // Simulate candump printout
+      printf("\n0x%02X", rxmsg_.can_id);
+      printf(" [%d]", rxmsg_.can_dlc);
+      for(int i=0; i<rxmsg_.can_dlc; i++ ) {
+        printf(" 0x%02X", rxmsg_.data[i]);
+      }
     }
-
   }
-
 }
 
 // Test can write function
@@ -383,8 +385,6 @@ asynStatus ecmcSocketCAN::readInt32(asynUser *pasynUser, epicsInt32 *value) {
   return asynSuccess;
 }
 
-
-
 asynStatus ecmcSocketCAN::readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
                                    size_t nElements, size_t *nIn) {
   int function = pasynUser->reason;
@@ -405,7 +405,7 @@ asynStatus ecmcSocketCAN::readInt8Array(asynUser *pasynUser, epicsInt8 *value,
 
 asynStatus  ecmcSocketCAN::readFloat64(asynUser *pasynUser, epicsFloat64 *value) {
   int function = pasynUser->reason;
-/*  if( function == asynSRateId_ ) {
+  /*if( function == asynSRateId_ ) {
     *value = cfgDataSampleRateHz_;
     return asynSuccess;
   }

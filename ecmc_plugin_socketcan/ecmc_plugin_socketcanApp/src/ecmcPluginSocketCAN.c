@@ -60,7 +60,7 @@ int canConstruct(char *configStr)
   alreadyLoaded = 1;
   // create SocketCAN object and register data callback
   lastConfStr = strdup(configStr);
-  createSocketCAN(configStr);
+  return createSocketCAN(configStr);
 
 /*	int nbytes;
 	struct sockaddr_can addr;
@@ -95,7 +95,7 @@ int canConstruct(char *configStr)
 deleteSocketCANbytes);
 	*/
 
-  return 0;
+  //return 0;
 }
 
 /** Optional function.
