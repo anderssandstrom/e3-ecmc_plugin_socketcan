@@ -280,7 +280,6 @@ struct ecmcPluginData pluginDataDef = {
         .funcArg10 = can_write,
         .funcGenericObj = NULL,
       },
-
   .funcs[3] = {0},  // last element set all to zero..
   // PLC consts
   .consts[0] = {0}, // last element set all to zero..

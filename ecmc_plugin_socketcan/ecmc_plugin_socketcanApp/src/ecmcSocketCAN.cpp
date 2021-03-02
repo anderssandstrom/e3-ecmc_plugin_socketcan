@@ -207,11 +207,12 @@ void ecmcSocketCAN::doReadWorker() {
 
     if(cfgDbgMode_) {
       // Simulate candump printout
-      printf("\nread 0x%02X", rxmsg_.can_id);
+      printf("r 0x%03X", rxmsg_.can_id);
       printf(" [%d]", rxmsg_.can_dlc);
       for(int i=0; i<rxmsg_.can_dlc; i++ ) {
         printf(" 0x%02X", rxmsg_.data[i]);
       }
+      printf("\n");
     }
   }
 }
@@ -253,17 +254,18 @@ void ecmcSocketCAN::writeCAN( uint32_t canId,
 
   // Maybe need to add the size to write here.. if struct is not full, hmm?!
 	int nbytes = write(socketId_, &txmsg_, sizeof(struct can_frame));
-  if (nbytes!=len) {
+  if (nbytes!= sizeof(struct can_frame)) {
     throw std::runtime_error( "Error in write.");
   }
 
   if(cfgDbgMode_) {	  
     // Simulate candump printout
-    printf("\nwrite 0x%02X", txmsg_.can_id);
+    printf("w 0x%03X", txmsg_.can_id);
     printf(" [%d]", txmsg_.can_dlc);
     for(int i=0; i<txmsg_.can_dlc; i++ ) {
       printf(" 0x%02X", txmsg_.data[i]);
     }
+    printf("\n");
   }
 }
 
