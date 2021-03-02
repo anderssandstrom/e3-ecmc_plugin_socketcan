@@ -45,26 +45,29 @@ class ecmcSocketCAN : public asynPortDriver {
   ecmcSocketCAN(char* configStr,
             char* portName);
   ~ecmcSocketCAN();
+
   void doReadWorker();
+  void doConnectWorker();
 
   virtual asynStatus    writeInt32(asynUser *pasynUser, epicsInt32 value);
   virtual asynStatus    readInt32(asynUser *pasynUser, epicsInt32 *value);
   virtual asynStatus    readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
                                       size_t nElements, size_t *nIn);
   virtual asynStatus    readFloat64(asynUser *pasynUser, epicsFloat64 *value);
-
-  void                  connect();
+  void                  connectExternal();  
   int                   getConnected();
   int                   writeCAN();   // Add args later
  private:
   void                  parseConfigStr(char *configStr);
   void                  initAsyn();
   static std::string    to_string(int value);
+  void                  connectPrivate();
   char*                 cfgCanIFStr_;   // Config: can interface can0, vcan0..
   int                   cfgDbgMode_;
   int                   cfgAutoConnect_;
   int                   destructs_;
   int                   connected_;
+  epicsEvent            doConnectEvent_;
   struct can_frame      rxmsg_;
   struct can_frame      txmsg_;
   struct ifreq          ifr_;

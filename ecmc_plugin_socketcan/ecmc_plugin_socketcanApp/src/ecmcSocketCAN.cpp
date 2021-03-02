@@ -39,6 +39,17 @@ void f_worker_read(void *obj) {
   canObj->doReadWorker();
 }
 
+// Start worker for socket connect()
+void f_worker_connect(void *obj) {
+  if(!obj) {
+    printf("%s/%s:%d: Error: Worker connect thread ecmcSocketCAN object NULL..\n",
+            __FILE__, __FUNCTION__, __LINE__);
+    return;
+  }
+  ecmcSocketCAN * canObj = (ecmcSocketCAN*)obj;
+  canObj->doConnectWorker();
+}
+
 /** ecmc ecmcSocketCAN class
  * This object can throw: 
  *    - bad_alloc
@@ -81,13 +92,19 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   }
 
   // Create worker thread for reading socket
-  std::string threadname = "ecmc." ECMC_PLUGIN_ASYN_PREFIX;
+  std::string threadname = "ecmc." ECMC_PLUGIN_ASYN_PREFIX".read";
   if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_read, this) == NULL) {
-    throw std::runtime_error("Error: Failed create worker thread.");
+    throw std::runtime_error("Error: Failed create worker thread for read().");
+  }
+
+  // Create worker thread for connecting socket
+  threadname = "ecmc." ECMC_PLUGIN_ASYN_PREFIX".connect";
+  if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_connect, this) == NULL) {
+    throw std::runtime_error("Error: Failed create worker thread for connect().");
   }
 
   if(cfgAutoConnect_) {
-    connect();
+    connectPrivate();
   }
 
   initAsyn();
@@ -141,7 +158,14 @@ void ecmcSocketCAN::parseConfigStr(char *configStr) {
   }
 }
 
-void ecmcSocketCAN::connect() {
+// For connect commands over asyn or plc. let worker connect
+void ecmcSocketCAN::connectExternal() {
+  if(!connected_) {
+    doConnectEvent_.signal(); // let worker start
+  }
+}
+
+void ecmcSocketCAN::connectPrivate() {
 
 	if((socketId_ = socket(PF_CAN, SOCK_RAW, CAN_RAW)) == -1) {
     throw std::runtime_error( "Error while opening socket.");		
@@ -176,7 +200,9 @@ void ecmcSocketCAN::doReadWorker() {
       break;
     }
 
-    // Wait for new CAN frame   
+    // Wait for new CAN frame 
+
+    // TODO MUST CHECK RETRUN VALUE OF READ!!!!!  
     read(socketId_, &rxmsg_, sizeof(rxmsg_));
 
     if(cfgDbgMode_) {
@@ -187,6 +213,19 @@ void ecmcSocketCAN::doReadWorker() {
         printf(" 0x%02X", rxmsg_.data[i]);
       }
     }
+  }
+}
+
+// Read socket worker
+void ecmcSocketCAN::doConnectWorker() {
+
+  while(true) {
+    
+    if(destructs_) {
+      break;
+    }
+    doConnectEvent_.wait();
+    connectPrivate();
   }
 }
 

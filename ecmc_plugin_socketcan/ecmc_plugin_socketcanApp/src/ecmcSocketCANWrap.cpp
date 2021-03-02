@@ -52,7 +52,7 @@ int createSocketCAN(char* configStr) {
 int connectSocketCAN() {
   if(can){
       try {       
-        can->connect();
+        can->connectExternal();
     }
     catch(std::exception& e) {
       printf("Exception: %s.\n",e.what());
