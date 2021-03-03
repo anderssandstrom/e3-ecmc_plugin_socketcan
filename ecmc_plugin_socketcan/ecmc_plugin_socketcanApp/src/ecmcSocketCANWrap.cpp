@@ -27,7 +27,7 @@
 static ecmcSocketCAN*  can = NULL;
 static char            portNameBuffer[ECMC_PLUGIN_MAX_PORTNAME_CHARS];
 
-int createSocketCAN(char* configStr) {
+int createSocketCAN(char* configStr, int exeSampleTimeMs) {
 
   // create new ecmcFFT object
 
@@ -36,7 +36,7 @@ int createSocketCAN(char* configStr) {
   snprintf (portNameBuffer, ECMC_PLUGIN_MAX_PORTNAME_CHARS,
             ECMC_PLUGIN_PORTNAME_PREFIX);
   try {
-    can = new ecmcSocketCAN(configStr, portNameBuffer);
+    can = new ecmcSocketCAN(configStr, portNameBuffer, exeSampleTimeMs);
   }
   catch(std::exception& e) {
     if(can) {
@@ -102,6 +102,13 @@ int triggWrites() {
     }
   }
   return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
+}
+
+int execute() {
+  if(can){
+    can->execute();
+  }
+  return 0;
 }
 
 int addWriteSocketCAN( double canId,

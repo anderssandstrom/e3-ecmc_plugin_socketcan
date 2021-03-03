@@ -17,6 +17,7 @@
 #include "ecmcAsynPortDriver.h"
 #include "ecmcSocketCANDefs.h"
 #include "ecmcSocketCANWriteBuffer.h"
+#include "ecmcCANOpenSDO.h"
 #include "inttypes.h"
 #include <string>
 
@@ -51,7 +52,8 @@ class ecmcSocketCAN : public asynPortDriver {
    *    - out_of_range
   */
   ecmcSocketCAN(char* configStr,
-            char* portName);
+                char* portName,
+                int exeSampelTimeMs);
   ~ecmcSocketCAN();
 
   void doReadWorker();
@@ -77,6 +79,7 @@ class ecmcSocketCAN : public asynPortDriver {
                                     uint8_t data7);
   int                   triggWrites();
   int                   getlastWritesError();
+  void                  execute();  // ecmc rt loop
 
  private:
   void                  parseConfigStr(char *configStr);
@@ -99,8 +102,10 @@ class ecmcSocketCAN : public asynPortDriver {
   int                   writeCmdCounter_;
   int                   writeBusy_;
   int                   lastWriteSumError_;
+  int                   exeSampleTimeMs_;
   
   ecmcSocketCANWriteBuffer *writeBuffer_;
+  ecmcCANOpenSDO *testSdo_;
 };
 
 #endif  /* ECMC_SOCKETCAN_H_ */

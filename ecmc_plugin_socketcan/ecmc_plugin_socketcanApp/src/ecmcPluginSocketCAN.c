@@ -23,6 +23,7 @@ extern "C" {
 #include <string.h>
 
 #include "ecmcPluginDefs.h"
+#include "ecmcPluginClient.h"
 #include "ecmcSocketCANWrap.h"
 
 #include <stdio.h>
@@ -60,7 +61,7 @@ int canConstruct(char *configStr)
   alreadyLoaded = 1;
   // create SocketCAN object and register data callback
   lastConfStr = strdup(configStr);
-  return createSocketCAN(configStr);
+  return createSocketCAN(configStr,getEcmcSampleTimeMS());
 
 /*	int nbytes;
 	struct sockaddr_can addr;
@@ -117,7 +118,7 @@ void canDestruct(void)
  **/
 int canRealtime(int ecmcError)
 {
-
+  
 	/*frame.can_id  = 0x123;
 	frame.can_dlc = 2;
 	frame.data[0] = frame.data[0]+1;
@@ -136,7 +137,7 @@ int canRealtime(int ecmcError)
   }
 */
   lastEcmcError = ecmcError;
-  return 0;
+  return execute();
 }
 
 /** Link to data source here since all sources should be availabe at this stage

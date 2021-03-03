@@ -96,6 +96,19 @@ void ecmcSocketCANWriteBuffer::doWriteWorker() {
   }
 }
 
+int ecmcSocketCANWriteBuffer::addWriteCAN(can_frame *frame) {
+  return addWriteCAN( frame->can_id,
+                      frame->can_dlc,
+                      frame->data[0],
+                      frame->data[1],
+                      frame->data[2],
+                      frame->data[3],
+                      frame->data[4],
+                      frame->data[5],
+                      frame->data[6],
+                      frame->data[7]);
+}
+
 // Test can write function (simple if for plc func)
 int ecmcSocketCANWriteBuffer::addWriteCAN( uint32_t canId,
                                            uint8_t len,

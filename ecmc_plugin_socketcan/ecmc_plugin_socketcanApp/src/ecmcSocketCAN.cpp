@@ -24,10 +24,6 @@
 #include "ecmcAsynPortDriverUtils.h"
 #include "epicsThread.h"
 
-// New data callback from ecmc
-static int printMissingObjError = 1;
-
-
 // Start worker for socket read()
 void f_worker_read(void *obj) {
   if(!obj) {
@@ -57,22 +53,22 @@ void f_worker_connect(void *obj) {
  *    - runtime_error
 */
 ecmcSocketCAN::ecmcSocketCAN(char* configStr,
-                 char* portName) 
-                  : asynPortDriver(portName,
-                   1, /* maxAddr */
-                   asynInt32Mask | asynFloat64Mask | asynFloat32ArrayMask |
-                   asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask |
-                   asynOctetMask | asynInt8ArrayMask | asynInt16ArrayMask |
-                   asynInt32ArrayMask | asynUInt32DigitalMask, /* Interface mask */
-                   asynInt32Mask | asynFloat64Mask | asynFloat32ArrayMask |
-                   asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask |
-                   asynOctetMask | asynInt8ArrayMask | asynInt16ArrayMask |
-                   asynInt32ArrayMask | asynUInt32DigitalMask, /* Interrupt mask */
-                   ASYN_CANBLOCK , /*NOT ASYN_MULTI_DEVICE*/
-                   1, /* Autoconnect */
-                   0, /* Default priority */
-                   0) /* Default stack size */
-                   {
+                             char* portName,
+                             int exeSampleTimeMs) 
+                             : asynPortDriver(portName,
+                              1, /* maxAddr */
+                              asynInt32Mask | asynFloat64Mask | asynFloat32ArrayMask |
+                              asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask |
+                              asynOctetMask | asynInt8ArrayMask | asynInt16ArrayMask |
+                              asynInt32ArrayMask | asynUInt32DigitalMask, /* Interface mask */
+                              asynInt32Mask | asynFloat64Mask | asynFloat32ArrayMask |
+                              asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask |
+                              asynOctetMask | asynInt8ArrayMask | asynInt16ArrayMask |
+                              asynInt32ArrayMask | asynUInt32DigitalMask, /* Interrupt mask */
+                              ASYN_CANBLOCK , /*NOT ASYN_MULTI_DEVICE*/
+                              1, /* Autoconnect */
+                              0, /* Default priority */
+                              0) /* Default stack size */ {
   // Init
   cfgCanIFStr_ = NULL;
   cfgDbgMode_  = 0;
@@ -81,6 +77,8 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   socketId_    = -1;
   connected_   = 0;
   writeBuffer_ = NULL;
+  testSdo_     = NULL;
+  exeSampleTimeMs_ = exeSampleTimeMs;
   
   memset(&ifr_,0,sizeof(struct ifreq));
   memset(&rxmsg_,0,sizeof(struct can_frame));
@@ -108,6 +106,8 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
     connectPrivate();
   }
   writeBuffer_ = new ecmcSocketCANWriteBuffer(socketId_, cfgDbgMode_);
+  testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,5000,exeSampleTimeMs_);
+
   initAsyn();
 }
 
@@ -206,7 +206,10 @@ void ecmcSocketCAN::doReadWorker() {
 
     // TODO MUST CHECK RETRUN VALUE OF READ!!!!!  
     read(socketId_, &rxmsg_, sizeof(rxmsg_));
-
+    if(testSdo_) {
+      testSdo_->newRxFrame(&rxmsg_);
+    }
+    
     if(cfgDbgMode_) {
       // Simulate candump printout
       printf("r 0x%03X", rxmsg_.can_id);
@@ -234,11 +237,19 @@ void ecmcSocketCAN::doConnectWorker() {
     connectPrivate();
   }
 }
+// struct byte0 {
+//   char ccs      : 3;
+//   char reserved : 1;
+//   char n        : 2;
+//   char e        : 1;
+//   char s        : 1;
+// }
 
 int ecmcSocketCAN::triggWrites() {
   if(!writeBuffer_) { 
     return ECMC_CAN_ERROR_WRITE_BUFFER_NULL;
   }
+
   writeBuffer_->triggWrites();
   return 0;
 }
@@ -278,6 +289,11 @@ int ecmcSocketCAN::addWriteCAN(uint32_t canId,
   return 0;
 }
   
+void  ecmcSocketCAN::execute() {
+  testSdo_->execute();
+  return;
+}
+
 void ecmcSocketCAN::initAsyn() {
 
   // Add enable "plugin.fft%d.enable"

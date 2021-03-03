@@ -51,6 +51,7 @@ SOURCES += $(APPSRC)/ecmcPluginSocketCAN.c
 SOURCES += $(APPSRC)/ecmcSocketCAN.cpp
 SOURCES += $(APPSRC)/ecmcSocketCANWrap.cpp
 SOURCES += $(APPSRC)/ecmcSocketCANWriteBuffer.cpp
+SOURCES += $(APPSRC)/ecmcCANOpenSDO.cpp
 
 db:
 

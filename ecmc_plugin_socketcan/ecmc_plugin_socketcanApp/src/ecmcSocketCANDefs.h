@@ -19,6 +19,27 @@
 #define ECMC_PLUGIN_IF_OPTION_CMD          "IF="
 #define ECMC_PLUGIN_CONNECT_OPTION_CMD     "CONNECT="
 
+enum ecmc_can_direction {
+    DIR_READ, 
+    DIR_WRITE };
+
+enum ecmc_read_states {
+    IDLE,    
+    WAIT_FOR_REQ_CONF,
+    WAIT_FOR_DATA};
+
+struct ODIndexBytes {
+    char byte0:8;
+    char byte1:8;
+};
+
+struct ODLegthBytes {
+    char byte0:8;
+    char byte1:8;
+    char byte2:8;
+    char byte3:8;
+};
+
 /** Just one error code in "c" part of plugin 
 (error handled with exceptions i c++ part) */
 #define ECMC_PLUGIN_SOCKETCAN_ERROR_CODE 1

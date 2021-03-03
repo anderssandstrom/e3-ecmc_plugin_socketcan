@@ -27,7 +27,7 @@ extern "C" {
  *
  *  \return 0 if success or otherwise an error code.\n
  */
-int createSocketCAN(char *configStr);
+int createSocketCAN(char *configStr, int exeSampleTimeMs);
 
 /** \brief Connect to SocketCAN interface\n
  */
@@ -50,6 +50,9 @@ int getWriteBusy();
   */
 int getlastWritesError();
 
+/** \brief execute from rt loop\n
+  */
+int execute();
 
 /** \brief add CAN frame to write buffer
  */

@@ -63,6 +63,7 @@ class ecmcSocketCANWriteBuffer {
                                     uint8_t data5,
                                     uint8_t data6,
                                     uint8_t data7);
+  int                   addWriteCAN(can_frame *frame);
   int                   triggWrites();
   int                   getlastWritesError();
 
