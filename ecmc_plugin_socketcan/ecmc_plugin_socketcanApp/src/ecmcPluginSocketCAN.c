@@ -163,10 +163,6 @@ double can_connected() {
   return (double)getSocketCANConnectd();
 }
 
-double can_write_busy() {
-  return (double)getWriteBusy();
-}
-
 // trigger all writes added to buffer
 double can_trigg_writes() {
   return (double)triggWrites();
@@ -319,29 +315,6 @@ struct ecmcPluginData pluginDataDef = {
         .funcGenericObj = NULL,
       },
   .funcs[4] =
-      { /*----can_write_busy----*/
-        // Function name (this is the name you use in ecmc plc-code)
-        .funcName = "can_write_busy",
-        // Function description
-        .funcDesc = "double can_write_busy() : get can busy writing added frames.",
-        /**
-        * 7 different prototypes allowed (only doubles since reg in plc).
-        * Only funcArg${argCount} func shall be assigned the rest set to NULL.
-        **/
-        .funcArg0 = can_write_busy,
-        .funcArg1 = NULL,
-        .funcArg2 = NULL,
-        .funcArg3 = NULL,
-        .funcArg4 = NULL,
-        .funcArg5 = NULL,
-        .funcArg6 = NULL,
-        .funcArg7 = NULL,
-        .funcArg8 = NULL,
-        .funcArg9 = NULL,
-        .funcArg10 = NULL,
-        .funcGenericObj = NULL,
-      },
-  .funcs[5] =
       { /*----can_last_writes_error----*/
         // Function name (this is the name you use in ecmc plc-code)
         .funcName = "can_last_writes_error",
@@ -364,7 +337,7 @@ struct ecmcPluginData pluginDataDef = {
         .funcArg10 = NULL,
         .funcGenericObj = NULL,
       },      
-  .funcs[6] = {0},  // last element set all to zero..
+  .funcs[5] = {0},  // last element set all to zero..
   // PLC consts
   .consts[0] = {0}, // last element set all to zero..
 };

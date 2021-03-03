@@ -3,20 +3,18 @@
 * ecmc is distributed subject to a Software License Agreement found
 * in file LICENSE that is included with this distribution. 
 *
-*  ecmcSocketCAN.h
+*  ecmcSocketCANWriteBuffer.h
 *
 *  Created on: Mar 22, 2020
 *      Author: anderssandstrom
 *
 \*************************************************************************/
-#ifndef ECMC_SOCKETCAN_H_
-#define ECMC_SOCKETCAN_H_
+#ifndef ECMC_SOCKETCAN_BUFFER_WRITE_H_
+#define ECMC_SOCKETCAN_BUFFER_WRITE_H_
+
+#include "ecmcAsynPortDriver.h"
 
 #include <stdexcept>
-#include "ecmcDataItem.h"
-#include "ecmcAsynPortDriver.h"
-#include "ecmcSocketCANDefs.h"
-#include "ecmcSocketCANWriteBuffer.h"
 #include "inttypes.h"
 #include <string>
 
@@ -38,33 +36,23 @@
 #define ECMC_CAN_ERROR_WRITE_BUSY 11
 #define ECMC_CAN_ERROR_WRITE_NO_DATA 12
 #define ECMC_CAN_ERROR_WRITE_INCOMPLETE 13
-#define ECMC_CAN_ERROR_WRITE_BUFFER_NULL 14
 
-class ecmcSocketCAN : public asynPortDriver {
+class ecmcSocketCANWriteBuffer {
  public:
 
-  /** ecmc ecmcSocketCAN class
+  /** ecmc ecmcSocketCANWriteBuffer class
    * This object can throw: 
    *    - bad_alloc
    *    - invalid_argument
    *    - runtime_error
    *    - out_of_range
   */
-  ecmcSocketCAN(char* configStr,
-            char* portName);
-  ~ecmcSocketCAN();
+  ecmcSocketCANWriteBuffer(int socketId, int dbgMode);
+  ~ecmcSocketCANWriteBuffer();
 
-  void doReadWorker();
+  
   void doWriteWorker();
-  void doConnectWorker();
-
-  virtual asynStatus    writeInt32(asynUser *pasynUser, epicsInt32 value);
-  virtual asynStatus    readInt32(asynUser *pasynUser, epicsInt32 *value);
-  virtual asynStatus    readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
-                                      size_t nElements, size_t *nIn);
-  virtual asynStatus    readFloat64(asynUser *pasynUser, epicsFloat64 *value);
-  void                  connectExternal();  
-  int                   getConnected();
+  
   int                   addWriteCAN(uint32_t canId,
                                     uint8_t len,
                                     uint8_t data0,
@@ -79,28 +67,19 @@ class ecmcSocketCAN : public asynPortDriver {
   int                   getlastWritesError();
 
  private:
-  void                  parseConfigStr(char *configStr);
-  void                  initAsyn();
   static std::string    to_string(int value);
-  void                  connectPrivate();
   int                   writeCAN(can_frame *frame);
-  char*                 cfgCanIFStr_;   // Config: can interface can0, vcan0..
-  int                   cfgDbgMode_;
-  int                   cfgAutoConnect_;
   int                   destructs_;
-  int                   connected_;
-  epicsEvent            doConnectEvent_;
+  int                   cfgDbgMode_;
   epicsEvent            doWriteEvent_;
-  struct can_frame      rxmsg_;
-  struct ifreq          ifr_;
   int                   socketId_;
-  struct sockaddr_can   addr_;
-  struct can_frame      txmsgBuffer_[ECMC_CAN_MAX_WRITE_CMDS];
-  int                   writeCmdCounter_;
+  struct can_frame      txmsgBuffer1_[ECMC_CAN_MAX_WRITE_CMDS];
+  struct can_frame      txmsgBuffer2_[ECMC_CAN_MAX_WRITE_CMDS];
+  int                   writeCmdCounter1_;
+  int                   writeCmdCounter2_;
   int                   writeBusy_;
   int                   lastWriteSumError_;
-  
-  ecmcSocketCANWriteBuffer *writeBuffer_;
+  int                   bufferIdAddFrames_;
 };
 
-#endif  /* ECMC_SOCKETCAN_H_ */
+#endif  /* ECMC_SOCKETCAN_BUFFER_WRITE_H_ */

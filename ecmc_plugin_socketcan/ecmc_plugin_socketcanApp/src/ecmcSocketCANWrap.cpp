@@ -62,6 +62,7 @@ int connectSocketCAN() {
   else {
     return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
   }
+  return 0;
 }
 
 int getSocketCANConnectd() {
@@ -75,19 +76,6 @@ int getSocketCANConnectd() {
     }
   }
   return 0;
-}
-
-int getWriteBusy() {
-  if(can){
-    try {       
-      return can->getWriteBusy();
-    }
-    catch(std::exception& e) {
-      printf("Exception: %s.\n",e.what());
-      return 1;
-    }
-  }
-  return 1;
 }
 
 int getlastWritesError() {

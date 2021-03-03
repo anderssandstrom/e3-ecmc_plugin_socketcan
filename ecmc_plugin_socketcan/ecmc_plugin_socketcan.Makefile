@@ -50,6 +50,7 @@ TEMPLATES += $(wildcard $(APPDB)/*.template)
 SOURCES += $(APPSRC)/ecmcPluginSocketCAN.c
 SOURCES += $(APPSRC)/ecmcSocketCAN.cpp
 SOURCES += $(APPSRC)/ecmcSocketCANWrap.cpp
+SOURCES += $(APPSRC)/ecmcSocketCANWriteBuffer.cpp
 
 db:
 
