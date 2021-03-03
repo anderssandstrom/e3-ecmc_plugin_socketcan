@@ -200,7 +200,7 @@ int ecmcCANOpenSDO::frameEqual(can_frame *frame1,can_frame *frame2) {
     return 1;
   }
   return 0;
-  //return memcmp(frame1,frame2, sizeof(can_frame)) == 0;
+  //return memcmp(frame1,frame2, sizeof(can_frame)) == 0; Why not working, union??!?
 }
 
 void ecmcCANOpenSDO::printBuffer() {
