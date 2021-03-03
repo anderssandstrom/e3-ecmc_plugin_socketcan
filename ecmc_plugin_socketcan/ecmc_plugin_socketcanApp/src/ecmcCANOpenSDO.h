@@ -64,7 +64,7 @@ class ecmcCANOpenSDO {
   uint32_t recivedBytes_;
   int useTg1Frame_;
   ecmc_read_states readStates_;
-
+  void printBuffer();
 };
 
 #endif  /* ECMC_CANOPEN_SDO_H_ */

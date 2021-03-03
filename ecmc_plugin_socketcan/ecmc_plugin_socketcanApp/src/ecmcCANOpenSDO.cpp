@@ -98,7 +98,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   recConfRead_.data[4] = ODLengthBytes_.byte0;
   recConfRead_.data[5] = ODLengthBytes_.byte1;
   recConfRead_.data[6] = ODLengthBytes_.byte2;
-  recConfRead_.data[7] = ODLengthBytes_.byte3 ;
+  recConfRead_.data[7] = ODLengthBytes_.byte3;
 }
 
 ecmcCANOpenSDO::~ecmcCANOpenSDO() {
@@ -155,9 +155,9 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
           return; // not correct frame
         }
         //Add data to buffer
-        if(frame->can_dlc + recivedBytes_ <= ODSize_) {
-          memcpy(dataBuffer_ + recivedBytes_, &(frame->data[0]),frame->can_dlc);
-          recivedBytes_ += frame->can_dlc;
+        if(frame->can_dlc-1 + recivedBytes_ <= ODSize_) {
+          memcpy(dataBuffer_ + recivedBytes_, &(frame->data[1]),frame->can_dlc-1);
+          recivedBytes_ += frame->can_dlc-1;
         }
         if(recivedBytes_ < ODSize_) {  // Ask for more data but must toggle so alternat the prepared frames
           if(useTg1Frame_) {
@@ -174,7 +174,8 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
         if (recivedBytes_ == ODSize_) {
           readStates_ =IDLE;
           busy_ = 0;
-          printf("All data transfered");
+          printf("All data transfered\n");
+          printBuffer();
         }
 
         break;
@@ -186,7 +187,33 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
 }
 
 int ecmcCANOpenSDO::frameEqual(can_frame *frame1,can_frame *frame2) {
-  return memcmp(frame1,frame2, sizeof(can_frame)) == 0;
+  if(frame1->can_id  == frame2->can_id  &&
+     frame1->can_dlc == frame2->can_dlc &&
+     frame1->data[0] == frame2->data[0] &&
+     frame1->data[1] == frame2->data[1] &&
+     frame1->data[2] == frame2->data[2] &&
+     frame1->data[3] == frame2->data[3] &&
+     frame1->data[4] == frame2->data[4] &&
+     frame1->data[5] == frame2->data[5] &&
+     frame1->data[6] == frame2->data[6] &&
+     frame1->data[7] == frame2->data[7]) {
+    return 1;
+  }
+  return 0;
+  //return memcmp(frame1,frame2, sizeof(can_frame)) == 0;
+}
+
+void ecmcCANOpenSDO::printBuffer() {
+  if(!dataBuffer_) {
+    return;
+  }
+
+  for(uint32_t i = 0; i < ODSize_; i = i + 2) {
+    uint16_t test;
+    memcpy(&test,&dataBuffer_[i],2);
+    printf("data[%d]: %u\n",i/2,test);
+  }
+  printf("\n");
 }
 
 //# w 0x603 [8] 0x40 0x40 0x26 0x00 0x00 0x00 0x00 0x00
