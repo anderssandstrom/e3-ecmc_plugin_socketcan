@@ -165,9 +165,9 @@ double can_connected() {
 }
 
 // trigger all writes added to buffer
-double can_trigg_writes() {
-  return (double)triggWrites();
-}
+//double can_trigg_writes() {
+//  return (double)triggWrites();
+//}
 
 // trigger all writes added to buffer
 double can_last_writes_error() {
@@ -293,29 +293,6 @@ struct ecmcPluginData pluginDataDef = {
         .funcGenericObj = NULL,
       },
   .funcs[3] =
-      { /*----can_trigg_writes----*/
-        // Function name (this is the name you use in ecmc plc-code)
-        .funcName = "can_trigg_writes",
-        // Function description
-        .funcDesc = "double can_trigg_writes() : Trigger write of all added frames.",
-        /**
-        * 7 different prototypes allowed (only doubles since reg in plc).
-        * Only funcArg${argCount} func shall be assigned the rest set to NULL.
-        **/
-        .funcArg0 = can_trigg_writes,
-        .funcArg1 = NULL,
-        .funcArg2 = NULL,
-        .funcArg3 = NULL,
-        .funcArg4 = NULL,
-        .funcArg5 = NULL,
-        .funcArg6 = NULL,
-        .funcArg7 = NULL,
-        .funcArg8 = NULL,
-        .funcArg9 = NULL,
-        .funcArg10 = NULL,
-        .funcGenericObj = NULL,
-      },
-  .funcs[4] =
       { /*----can_last_writes_error----*/
         // Function name (this is the name you use in ecmc plc-code)
         .funcName = "can_last_writes_error",
@@ -338,7 +315,7 @@ struct ecmcPluginData pluginDataDef = {
         .funcArg10 = NULL,
         .funcGenericObj = NULL,
       },      
-  .funcs[5] = {0},  // last element set all to zero..
+  .funcs[4] = {0},  // last element set all to zero..
   // PLC consts
   .consts[0] = {0}, // last element set all to zero..
 };

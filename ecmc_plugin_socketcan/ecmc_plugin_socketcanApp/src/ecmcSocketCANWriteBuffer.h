@@ -28,6 +28,8 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 
+#include "epicsMutex.h"
+
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
@@ -36,6 +38,11 @@
 #define ECMC_CAN_ERROR_WRITE_BUSY 11
 #define ECMC_CAN_ERROR_WRITE_NO_DATA 12
 #define ECMC_CAN_ERROR_WRITE_INCOMPLETE 13
+
+struct canWriteBuffer {      
+  struct can_frame frames[ECMC_CAN_MAX_WRITE_CMDS];
+  int              frameCounter;
+};
 
 class ecmcSocketCANWriteBuffer {
  public:
@@ -51,8 +58,9 @@ class ecmcSocketCANWriteBuffer {
   ~ecmcSocketCANWriteBuffer();
 
   
-  void doWriteWorker();
-  
+  void                  doWriteWorker();
+  //void                  doTriggerWorker();
+
   int                   addWriteCAN(uint32_t canId,
                                     uint8_t len,
                                     uint8_t data0,
@@ -64,23 +72,38 @@ class ecmcSocketCANWriteBuffer {
                                     uint8_t data6,
                                     uint8_t data7);
   int                   addWriteCAN(can_frame *frame);
-  int                   triggWrites();
   int                   getlastWritesError();
 
  private:
+  //int                   triggWrites();
   static std::string    to_string(int value);
   int                   writeCAN(can_frame *frame);
+  int                   switchBuffer();
+  int                   addToBuffer(can_frame *frame);
+  //void                  addToBuffer1(can_frame *frame);
+  //void                  addToBuffer2(can_frame *frame);
+  int                   writeBuffer();
+  //void                  writeBuffer1();
+  //void                  writeBuffer2();
   int                   destructs_;
   int                   cfgDbgMode_;
-  epicsEvent            doWriteEvent_;
+  //epicsEvent            doWriteEvent_;
   int                   socketId_;
-  struct can_frame      txmsgBuffer1_[ECMC_CAN_MAX_WRITE_CMDS];
-  struct can_frame      txmsgBuffer2_[ECMC_CAN_MAX_WRITE_CMDS];
-  int                   writeCmdCounter1_;
-  int                   writeCmdCounter2_;
+//  struct can_frame      txmsgBuffer1_[ECMC_CAN_MAX_WRITE_CMDS];
+//  struct can_frame      txmsgBuffer2_[ECMC_CAN_MAX_WRITE_CMDS];
+//  int                   writeCmdCounter1_;
+//  int                   writeCmdCounter2_;  
+//  epicsMutexId          bufferMutex1_;
+//  epicsMutexId          bufferMutex2_;
+  epicsMutexId          bufferSwitchMutex_;
+  canWriteBuffer        buffer1_;
+  canWriteBuffer        buffer2_;
+  canWriteBuffer       *bufferAdd_;
+  canWriteBuffer       *bufferWrite_;
   int                   writeBusy_;
   int                   lastWriteSumError_;
   int                   bufferIdAddFrames_;
+  timespec              writePauseTime_; 
 };
 
 #endif  /* ECMC_SOCKETCAN_BUFFER_WRITE_H_ */

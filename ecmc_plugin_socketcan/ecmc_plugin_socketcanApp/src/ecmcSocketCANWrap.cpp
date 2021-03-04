@@ -91,18 +91,18 @@ int getlastWritesError() {
   return 1;
 }
 
-int triggWrites() {
-  if(can){
-    try {       
-      return can->triggWrites();      
-    }
-    catch(std::exception& e) {
-      printf("Exception: %s.\n",e.what());
-      return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
-    }
-  }
-  return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
-}
+// int triggWrites() {
+//   if(can){
+//     try {       
+//       return can->triggWrites();      
+//     }
+//     catch(std::exception& e) {
+//       printf("Exception: %s.\n",e.what());
+//       return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
+//     }
+//   }
+//   return ECMC_PLUGIN_SOCKETCAN_ERROR_CODE;
+// }
 
 int execute() {
   if(can){

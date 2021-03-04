@@ -40,7 +40,7 @@ int getSocketCANConnectd();
 
 /** \brief Write all buffered writes to CAN
  */
-int triggWrites();
+//int triggWrites();
 
 /** \brief Busy writing\n
   */

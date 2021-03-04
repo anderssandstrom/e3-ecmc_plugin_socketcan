@@ -77,7 +77,7 @@ class ecmcSocketCAN : public asynPortDriver {
                                     uint8_t data5,
                                     uint8_t data6,
                                     uint8_t data7);
-  int                   triggWrites();
+  //int                   triggWrites();
   int                   getlastWritesError();
   void                  execute();  // ecmc rt loop
 

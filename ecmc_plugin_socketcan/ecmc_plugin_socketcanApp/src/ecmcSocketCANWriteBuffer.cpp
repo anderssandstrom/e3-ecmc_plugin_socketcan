@@ -20,7 +20,6 @@
 
 #define ECMC_PLUGIN_ASYN_PREFIX      "plugin.can"
 
-
 // Start worker for socket read()
 void f_worker_write(void *obj) {
   if(!obj) {
@@ -32,81 +31,104 @@ void f_worker_write(void *obj) {
   canObj->doWriteWorker();
 }
 
+//void f_worker_trigger(void *obj) {
+//  if(!obj) {
+//    printf("%s/%s:%d: Error: Worker trigg thread ecmcSocketCANWriteBuffer object NULL..\n",
+//            __FILE__, __FUNCTION__, __LINE__);
+//    return;
+//  }
+//  ecmcSocketCANWriteBuffer * canObj = (ecmcSocketCANWriteBuffer*)obj;
+//  canObj->doTriggerWorker();
+//}
+
 /** ecmc ecmcSocketCANWriteBuffer class
 */
 ecmcSocketCANWriteBuffer::ecmcSocketCANWriteBuffer(int socketId, int cfgDbgMode) {
-  memset(&txmsgBuffer1_,0,sizeof(struct can_frame)*ECMC_CAN_MAX_WRITE_CMDS);
-  memset(&txmsgBuffer2_,0,sizeof(struct can_frame)*ECMC_CAN_MAX_WRITE_CMDS);
+  memset(&buffer1_.frames,0,sizeof(struct can_frame)*ECMC_CAN_MAX_WRITE_CMDS);
+  memset(&buffer2_.frames,0,sizeof(struct can_frame)*ECMC_CAN_MAX_WRITE_CMDS);
   bufferIdAddFrames_ = 1;  // start to add frames to buffer 1
-  writeCmdCounter1_  = 0;
-  writeCmdCounter2_  = 0;
   writeBusy_         = 0;
   socketId_          = socketId;
   cfgDbgMode_        = cfgDbgMode;
   destructs_         = 0;
+  bufferSwitchMutex_ = epicsMutexCreate();
+  lastWriteSumError_ = 0;
+  
+  writePauseTime_.tv_sec  = 0;
+  writePauseTime_.tv_nsec = 2e6;  // 1ms
+  buffer1_.frameCounter = 0;
+  buffer2_.frameCounter = 0;
 
+  bufferAdd_ = &buffer1_;
+  bufferWrite_ = &buffer2_; 
 
   // Create worker thread for writing socket
   std::string threadname = "ecmc." ECMC_PLUGIN_ASYN_PREFIX".write";
   if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_write, this) == NULL) {
     throw std::runtime_error("Error: Failed create worker thread for write().");
   }
-
+  
+  //threadname = "ecmc." ECMC_PLUGIN_ASYN_PREFIX".write_trigg";
+  //if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_trigger, this) == NULL) {
+  //  throw std::runtime_error("Error: Failed create worker thread for write trigger.");
+  //}
 }
 
 ecmcSocketCANWriteBuffer::~ecmcSocketCANWriteBuffer() {
   // kill worker
   destructs_ = 1;  // maybe need todo in other way..
-  doWriteEvent_.signal();
+  //doWriteEvent_.signal();
 }
+
+//void ecmcSocketCANWriteBuffer::doTriggerWorker() {  
+//  while(true) {    
+//    if(destructs_) {
+//      return;
+//    }
+//    nanosleep(&writePauseTime_,NULL);    
+//    triggWrites();
+//  }
+//}
 
 // Write socket worker thread (switch between two buffers)
 void ecmcSocketCANWriteBuffer::doWriteWorker() {
-  int errorCode = 0;
   while(true) {    
+    if(destructs_) {
+      return;
+    }    
+
+    nanosleep(&writePauseTime_,NULL);    
+
+    if(writeBusy_) {      
+      continue;
+    }
+
     if(destructs_) {
       return;
     }
 
-    doWriteEvent_.wait();
-    if(destructs_) {
-      return;
+    writeBusy_ = 1;
+    // Check if anything to write..
+    if(bufferAdd_->frameCounter == 0) {
+      writeBusy_ = 0;
+      continue;
     }
-    if(bufferIdAddFrames_ == 1) {
-      // Write buffer 2 since addFrames to buffer 1
-      for(int i=0; i<writeCmdCounter2_;i++) {
-        errorCode = writeCAN(&txmsgBuffer2_[i]);
-        if(errorCode) {
-          lastWriteSumError_ = errorCode;
-        }
-      }
-      writeCmdCounter2_ = 0;
-    } else {
-      // Write buffer 1 since addFrames to buffer 2
-      for(int i=0; i<writeCmdCounter1_;i++) {
-        errorCode = writeCAN(&txmsgBuffer1_[i]);
-        if(errorCode) {
-          lastWriteSumError_ = errorCode;
-        }
-      }
-      writeCmdCounter1_ = 0;
-    }
-      
+
+    // Switch buffers and write!
+    switchBuffer();
+    
+    writeBuffer();
     writeBusy_ = 0;
   }
 }
 
-int ecmcSocketCANWriteBuffer::addWriteCAN(can_frame *frame) {
-  return addWriteCAN( frame->can_id,
-                      frame->can_dlc,
-                      frame->data[0],
-                      frame->data[1],
-                      frame->data[2],
-                      frame->data[3],
-                      frame->data[4],
-                      frame->data[5],
-                      frame->data[6],
-                      frame->data[7]);
+int ecmcSocketCANWriteBuffer::addWriteCAN(can_frame *frame) {  
+  // Cannot switch if busy..
+  int errorCode = 0;
+  epicsMutexLock(bufferSwitchMutex_);
+  errorCode = addToBuffer(frame);
+  epicsMutexUnlock(bufferSwitchMutex_);
+  return errorCode;
 }
 
 // Test can write function (simple if for plc func)
@@ -120,74 +142,129 @@ int ecmcSocketCANWriteBuffer::addWriteCAN( uint32_t canId,
                                            uint8_t data5,
                                            uint8_t data6,
                                            uint8_t data7) {
-  
-  // Cannot switch if busy..  
-  if(writeBusy_) {
-    if(bufferIdAddFrames_ == 1 && writeCmdCounter1_ >= ECMC_CAN_MAX_WRITE_CMDS){
-      return ECMC_CAN_ERROR_WRITE_FULL;
-    }
-    if(bufferIdAddFrames_ == 2 && writeCmdCounter2_ >= ECMC_CAN_MAX_WRITE_CMDS){
-      return ECMC_CAN_ERROR_WRITE_FULL;
-    }
-  } else {  // switch buffer if full
-    if(bufferIdAddFrames_ == 1 && writeCmdCounter1_ >= ECMC_CAN_MAX_WRITE_CMDS){
-      triggWrites();  // will also switch buffer id
-    } 
-    if(bufferIdAddFrames_ == 2 && writeCmdCounter2_ >= ECMC_CAN_MAX_WRITE_CMDS){
-      triggWrites();  // will also switch buffer id
-    } 
-  }  
-
-  if(bufferIdAddFrames_ == 1){
-    txmsgBuffer1_[writeCmdCounter1_].can_id  = canId;
-    txmsgBuffer1_[writeCmdCounter1_].can_dlc = len;
-    txmsgBuffer1_[writeCmdCounter1_].data[0] = data0;
-    txmsgBuffer1_[writeCmdCounter1_].data[1] = data1;
-    txmsgBuffer1_[writeCmdCounter1_].data[2] = data2;
-    txmsgBuffer1_[writeCmdCounter1_].data[3] = data3;
-    txmsgBuffer1_[writeCmdCounter1_].data[4] = data4;
-    txmsgBuffer1_[writeCmdCounter1_].data[5] = data5;
-    txmsgBuffer1_[writeCmdCounter1_].data[6] = data6;
-    txmsgBuffer1_[writeCmdCounter1_].data[7] = data7;
-    writeCmdCounter1_++;
-  }
-  else {
-    txmsgBuffer2_[writeCmdCounter2_].can_id  = canId;
-    txmsgBuffer2_[writeCmdCounter2_].can_dlc = len;
-    txmsgBuffer2_[writeCmdCounter2_].data[0] = data0;
-    txmsgBuffer2_[writeCmdCounter2_].data[1] = data1;
-    txmsgBuffer2_[writeCmdCounter2_].data[2] = data2;
-    txmsgBuffer2_[writeCmdCounter2_].data[3] = data3;
-    txmsgBuffer2_[writeCmdCounter2_].data[4] = data4;
-    txmsgBuffer2_[writeCmdCounter2_].data[5] = data5;
-    txmsgBuffer2_[writeCmdCounter2_].data[6] = data6;
-    txmsgBuffer2_[writeCmdCounter2_].data[7] = data7;
-    writeCmdCounter2_++;
-  }
-  return 0;
+  can_frame frame;
+  frame.can_id  = canId;
+  frame.can_dlc = len;     // data length
+  frame.data[0] = data0;  // request read cmd
+  frame.data[1] = data1;
+  frame.data[2] = data2;
+  frame.data[3] = data3;
+  frame.data[4] = data4;
+  frame.data[5] = data5;
+  frame.data[6] = data6;
+  frame.data[7] = data7;
+  return addWriteCAN(&frame);
 }
 
 int ecmcSocketCANWriteBuffer::getlastWritesError() {
   return lastWriteSumError_;
-}  
+}
 
-// Trigger all writes
-int ecmcSocketCANWriteBuffer::triggWrites() {
-  
-  if(writeBusy_) {
-    return ECMC_CAN_ERROR_WRITE_BUSY;
+int ecmcSocketCANWriteBuffer::addToBuffer(can_frame *frame) {
+
+  if(bufferAdd_->frameCounter >= ECMC_CAN_MAX_WRITE_CMDS) {
+    return ECMC_CAN_ERROR_WRITE_FULL;
   }
 
-  if(bufferIdAddFrames_ == 1) {
-    bufferIdAddFrames_ = 2;
-  } else {
-    bufferIdAddFrames_ = 1;
-  }
-  writeBusy_ = 1;
-  lastWriteSumError_ = 0;
-  doWriteEvent_.signal(); // let worker start
+  bufferAdd_->frames[bufferAdd_->frameCounter] = *frame;
+  bufferAdd_->frameCounter++; 
   return 0;
 }
+
+//void ecmcSocketCANWriteBuffer::addToBuffer1(can_frame *frame) {
+//  printf("addToBuffer1\n");
+//  epicsMutexLock(bufferMutex1_);
+//  buffer1_.frame[buffer1_.frameCounter] = *frame;
+//  buffer1_.frameCounter++; 
+//  epicsMutexUnlock(bufferMutex1_);
+//}
+//
+//void ecmcSocketCANWriteBuffer::addToBuffer2(can_frame *frame) {
+//  printf("addToBuffer2\n");
+//  epicsMutexLock(bufferMutex2_);
+//  buffer2_.frame[buffer2_.frameCounter] = *frame;
+//  buffer2_.frameCounter++; 
+//  epicsMutexUnlock(bufferMutex2_);
+//}
+//
+
+int ecmcSocketCANWriteBuffer::writeBuffer() {
+
+  int errorCode = 0;
+  if(bufferWrite_->frameCounter==0) {
+    return 0;
+  }
+
+  for(int i=0; i<bufferWrite_->frameCounter;i++) {
+    errorCode = writeCAN(&bufferWrite_->frames[i]);
+    if(errorCode) {
+      lastWriteSumError_ = errorCode;
+    }
+  }
+  bufferWrite_->frameCounter = 0;
+  return lastWriteSumError_;
+}
+
+//void ecmcSocketCANWriteBuffer::writeBuffer1() {
+//  //printf("writeBuffer1\n");
+//  int errorCode = 0;
+//  epicsMutexLock(bufferMutex1_);
+//  if(buffer1_.frameCounter==0) {
+//    return;
+//  }
+//  printf("writeBuffer1\n");
+//  for(int i=0; i<buffer1_.frameCounter;i++) {
+//    errorCode = writeCAN(&buffer1_.frame[i]);
+//    if(errorCode) {
+//      lastWriteSumError_ = errorCode;
+//    }
+//  }
+//  buffer1_.frameCounter = 0;
+//  epicsMutexUnlock(bufferMutex1_);  
+//}
+//
+//void ecmcSocketCANWriteBuffer::writeBuffer2() {
+//  
+//  int errorCode = 0;
+//  epicsMutexLock(bufferMutex2_);
+//  if(buffer2_.frameCounter==0) {
+//    return;
+//  }
+//  printf("writeBuffer2\n");
+//
+//  for(int i=0; i<buffer2_.frameCounter;i++) {
+//    errorCode = writeCAN(&buffer2_.frame[i]);
+//    if(errorCode) {
+//      lastWriteSumError_ = errorCode;
+//    }
+//  }
+//  buffer2_.frameCounter = 0;
+//  epicsMutexUnlock(bufferMutex2_);
+//}
+
+int ecmcSocketCANWriteBuffer::switchBuffer() {
+
+  // ensure safe buffer switch
+  epicsMutexLock(bufferSwitchMutex_);
+  canWriteBuffer *temp = bufferWrite_;
+  bufferWrite_ = bufferAdd_;
+  bufferAdd_   = temp;
+  epicsMutexUnlock(bufferSwitchMutex_);
+  return 0;
+}
+
+// Trigger all writes
+//int ecmcSocketCANWriteBuffer::triggWrites() {
+//  
+//  if(writeBusy_) {
+//    return ECMC_CAN_ERROR_WRITE_BUSY;
+//  }
+//  writeBusy_ = 1;
+//  switchBuffer();
+//  lastWriteSumError_ = 0;
+//  doWriteEvent_.signal(); // let worker start
+//  return 0;
+//}
 
 // Write to socket
 int ecmcSocketCANWriteBuffer::writeCAN(can_frame *frame){
