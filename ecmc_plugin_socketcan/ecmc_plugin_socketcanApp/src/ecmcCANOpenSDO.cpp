@@ -28,14 +28,16 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
                                uint8_t ODSubIndex,
                                uint32_t ODSize,
                                int readSampleTimeMs, 
-                               int exeSampleTimeMs) {
+                               int exeSampleTimeMs,
+                               int dbgMode) {
 
   writeBuffer_        = writeBuffer;
-  cobIdRx_       = cobIdRx;
-  cobIdTx_       = cobIdTx;
+  cobIdRx_            = cobIdRx;
+  cobIdTx_            = cobIdTx;
   ODIndex_            = ODIndex;
   ODSubIndex_         = ODSubIndex;
   ODSize_             = ODSize;
+  dbgMode_            = dbgMode;
   // convert to ODIndex_ to indiviual bytes struct
   memcpy(&ODIndexBytes_, &ODIndex, 2);
   memcpy(&ODLengthBytes_, &ODSize_, 4);
@@ -117,8 +119,9 @@ void ecmcCANOpenSDO::execute() {
       //initiate
       recivedBytes_ = 0;
       readStates_ = WAIT_FOR_REQ_CONF;
-      printf("readStates_ = WAIT_FOR_REQ_CONF!!!\n");
-
+      if(dbgMode_) {
+        printf("readStates_ = WAIT_FOR_REQ_CONF!!!\n");
+      }
       writeBuffer_->addWriteCAN(&reqDataFrame_);
     }
   }
@@ -137,12 +140,16 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
      case WAIT_FOR_REQ_CONF:
         // Compare to the conf frame.. might not always be correct
         if ( !frameEqual(&recConfRead_,frame)) {
-          printf("frame not equal\n");
+          if(dbgMode_) {
+            printf("frame not equal\n");
+          }
           // Not "my frame", wait for new
           return;
         }
         readStates_ = WAIT_FOR_DATA; //Next frame should be data!
-        printf("readStates_ = WAIT_FOR_DATA!!!\n");
+        if(dbgMode_) {
+          printf("readStates_ = WAIT_FOR_DATA!!!\n");
+        }
         writeBuffer_->addWriteCAN(&confReqFrameTg0_);  // Send tg0 frame and wait for data, also size must match to go ahead
         useTg1Frame_ = 1;
         break;
@@ -165,13 +172,17 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
             useTg1Frame_ = 1;
           }
         }
-        printf("recivedBytes = %d!!!\n",recivedBytes_);
+        if(dbgMode_) {
+          printf("recivedBytes = %d!!!\n",recivedBytes_);
+        }
         
         if (recivedBytes_ == ODSize_) {
           readStates_ =IDLE;
           busy_ = 0;
-          printf("All data transfered\n");
-          printBuffer();
+          if(dbgMode_) {
+            printf("All data transfered\n");
+            printBuffer();
+          }
         }
 
         break;

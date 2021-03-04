@@ -18,6 +18,7 @@
 #include "ecmcSocketCANDefs.h"
 #include "ecmcSocketCANWriteBuffer.h"
 #include "ecmcCANOpenSDO.h"
+#include "ecmcCANOpenPDO.h"
 #include "inttypes.h"
 #include <string>
 
@@ -105,6 +106,7 @@ class ecmcSocketCAN : public asynPortDriver {
   
   ecmcSocketCANWriteBuffer *writeBuffer_;
   ecmcCANOpenSDO *testSdo_;
+  ecmcCANOpenPDO *testPdo_;
 };
 
 #endif  /* ECMC_SOCKETCAN_H_ */

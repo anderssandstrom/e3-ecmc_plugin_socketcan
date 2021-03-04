@@ -78,6 +78,7 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   connected_   = 0;
   writeBuffer_ = NULL;
   testSdo_     = NULL;
+  testPdo_     = NULL;
   exeSampleTimeMs_ = exeSampleTimeMs;
   
   memset(&ifr_,0,sizeof(struct ifreq));
@@ -106,8 +107,8 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
     connectPrivate();
   }
   writeBuffer_ = new ecmcSocketCANWriteBuffer(socketId_, cfgDbgMode_);
-  testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,5000,exeSampleTimeMs_);
-
+  testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,5000,exeSampleTimeMs_, cfgDbgMode_);
+  testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,exeSampleTimeMs_, cfgDbgMode_);
   initAsyn();
 }
 
@@ -209,7 +210,10 @@ void ecmcSocketCAN::doReadWorker() {
     if(testSdo_) {
       testSdo_->newRxFrame(&rxmsg_);
     }
-    
+    if(testPdo_) {
+      testPdo_->newRxFrame(&rxmsg_);
+    }
+
     if(cfgDbgMode_) {
       // Simulate candump printout
       printf("r 0x%03X", rxmsg_.can_id);
@@ -274,7 +278,15 @@ int ecmcSocketCAN::addWriteCAN(uint32_t canId,
 }
   
 void  ecmcSocketCAN::execute() {
-  testSdo_->execute();
+
+  if(testSdo_) {
+    testSdo_->execute();
+  }
+
+  if(testPdo_) {
+    testPdo_->execute();
+  }
+
   return;
 }
 

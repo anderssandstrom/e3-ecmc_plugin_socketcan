@@ -34,7 +34,8 @@ class ecmcCANOpenSDO {
                  uint8_t ODSubIndex, // Object dictionary subindex
                  uint32_t ODSize,
                  int readSampleTimeMs, 
-                 int exeSampleTimeMs);
+                 int exeSampleTimeMs, 
+                 int dbgMode);
   ~ecmcCANOpenSDO();
   void execute();
   void newRxFrame(can_frame *frame);
@@ -58,7 +59,7 @@ class ecmcCANOpenSDO {
   can_frame confReqFrameTg0_;
   can_frame confReqFrameTg1_;
   can_frame recConfRead_;
-
+  int dbgMode_;
   int busy_;
   uint8_t *dataBuffer_;
   uint32_t recivedBytes_;
