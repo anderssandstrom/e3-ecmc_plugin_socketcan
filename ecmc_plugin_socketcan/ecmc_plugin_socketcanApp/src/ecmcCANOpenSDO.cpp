@@ -21,8 +21,8 @@
  * ecmc ecmcCANOpenSDO class
 */
 ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
-                               uint32_t SDOSlaveTXId,  // 0x580 + CobId
-                               uint32_t SDOSlaveRXId,  // 0x600 + Cobid
+                               uint32_t cobIdTx,  // 0x580 + CobId
+                               uint32_t cobIdRx,  // 0x600 + Cobid
                                ecmc_can_direction rw,
                                uint16_t ODIndex,
                                uint8_t ODSubIndex,
@@ -31,8 +31,8 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
                                int exeSampleTimeMs) {
 
   writeBuffer_        = writeBuffer;
-  SDOSlaveRXId_       = SDOSlaveRXId;
-  SDOSlaveTXId_       = SDOSlaveTXId;
+  cobIdRx_       = cobIdRx;
+  cobIdTx_       = cobIdTx;
   ODIndex_            = ODIndex;
   ODSubIndex_         = ODSubIndex;
   ODSize_             = ODSize;
@@ -52,7 +52,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
 
   // Request data (send on slave RX)
   // w 0x603 [8] 0x40 0x40 0x26 0x00 0x00 0x00 0x00 0x00
-  reqDataFrame_.can_id  = SDOSlaveRXId;
+  reqDataFrame_.can_id  = cobIdRx;
   reqDataFrame_.can_dlc = 8;     // data length
   reqDataFrame_.data[0] = 0x40;  // request read cmd
   reqDataFrame_.data[1] = ODIndexBytes_.byte0;
@@ -65,7 +65,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   
   // Confirm Toggle 0
   // w 0x603 [8] 0x61 0x40 0x26 0x00 0x00 0x00 0x00 0x00
-  confReqFrameTg0_.can_id  = SDOSlaveRXId;
+  confReqFrameTg0_.can_id  = cobIdRx;
   confReqFrameTg0_.can_dlc = 8;     // data length
   confReqFrameTg0_.data[0] = 0x61;  // confirm cmd toggle 0
   confReqFrameTg0_.data[1] = ODIndexBytes_.byte0;
@@ -78,7 +78,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   
   // Confirm Toggle 1
   // w 0x603 [8] 0x71 0x40 0x26 0x00 0x00 0x00 0x00 0x00
-  confReqFrameTg1_.can_id  = SDOSlaveRXId;
+  confReqFrameTg1_.can_id  = cobIdRx;
   confReqFrameTg1_.can_dlc = 8;     // data length
   confReqFrameTg1_.data[0] = 0x71;  // confirm cmd toggle 1
   confReqFrameTg1_.data[1] = ODIndexBytes_.byte0;
@@ -89,7 +89,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   confReqFrameTg1_.data[6] = 0;
   confReqFrameTg1_.data[7] = 0;
 
-  recConfRead_.can_id  = SDOSlaveTXId;
+  recConfRead_.can_id  = cobIdTx;
   recConfRead_.can_dlc = 8;     // data length
   recConfRead_.data[0] = 0x41;  // confirm cmd toggle 1
   recConfRead_.data[1] = ODIndexBytes_.byte0;
@@ -148,7 +148,7 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
         break;
 
       case WAIT_FOR_DATA:
-        if(frame->can_id != SDOSlaveTXId_) {
+        if(frame->can_id != cobIdTx_) {
           return; // not correct frame
         }
         //Add data to buffer

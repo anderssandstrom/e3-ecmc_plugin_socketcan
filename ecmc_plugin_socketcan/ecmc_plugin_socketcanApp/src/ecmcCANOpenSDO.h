@@ -27,8 +27,8 @@
 class ecmcCANOpenSDO {
  public:
   ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
-                 uint32_t SDOSlaveTXId,    // 0x580 + CobId
-                 uint32_t SDOSlaveRXId,    // 0x600 + Cobid
+                 uint32_t cobIdTx,    // 0x580 + CobId
+                 uint32_t cobIdRx,    // 0x600 + Cobid
                  ecmc_can_direction rw,
                  uint16_t ODIndex,    // Object dictionary index
                  uint8_t ODSubIndex, // Object dictionary subindex
@@ -43,8 +43,8 @@ class ecmcCANOpenSDO {
   int frameEqual(can_frame *frame1,can_frame *frame2);
 
   ecmcSocketCANWriteBuffer *writeBuffer_;
-  uint32_t SDOSlaveRXId_;   // with cobid
-  uint32_t SDOSlaveTXId_;   // with cobid
+  uint32_t cobIdRx_;   // with cobid
+  uint32_t cobIdTx_;   // with cobid
   int readSampleTimeMs_;
   int exeSampleTimeMs_;
   ecmc_can_direction rw_;
