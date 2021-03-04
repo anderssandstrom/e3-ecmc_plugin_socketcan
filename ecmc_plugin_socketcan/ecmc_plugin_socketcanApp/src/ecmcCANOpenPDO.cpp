@@ -24,14 +24,21 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
                                uint32_t cobId,  // 0x580 + CobId
                                ecmc_can_direction rw,
                                uint32_t ODSize,
-                               int readTimeoutMs, 
+                               int readTimeoutMs,
+                               int writeCycleMs, 
                                int exeSampleTimeMs,
                                int dbgMode) {
 
   writeBuffer_        = writeBuffer;
   cobId_              = cobId;
-  ODSize_             = ODSize; 
+  ODSize_             = ODSize;
+  
+  if(ODSize_ > 8)  {
+    ODSize_ = 8;
+  }
+
   readTimeoutMs_      = readTimeoutMs;
+  writeCycleMs_       = writeCycleMs;
   exeSampleTimeMs_    = exeSampleTimeMs;
   rw_                 = rw;
   exeCounter_         = 0;
@@ -39,6 +46,18 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
   errorCode_          = 0;
   dataBuffer_         = new uint8_t(ODSize_);
   dbgMode_            = dbgMode;
+
+  writeFrame_.can_id  = cobId_;
+  writeFrame_.can_dlc = ODSize;     // data length
+  writeFrame_.data[0] = 0;  // request read cmd
+  writeFrame_.data[1] = 0;
+  writeFrame_.data[2] = 0;
+  writeFrame_.data[3] = 0;
+  writeFrame_.data[4] = 0;
+  writeFrame_.data[5] = 0;
+  writeFrame_.data[6] = 0;
+  writeFrame_.data[7] = 0;
+
 }
 
 ecmcCANOpenPDO::~ecmcCANOpenPDO() {
@@ -46,13 +65,27 @@ ecmcCANOpenPDO::~ecmcCANOpenPDO() {
 }
 
 void ecmcCANOpenPDO::execute() {
+  
   exeCounter_++;
-  if(exeCounter_* exeSampleTimeMs_ >= readTimeoutMs_) {
-    errorCode_ = ECMC_CAN_ERROR_PDO_TIMEOUT;
-    if(dbgMode_) {
-      printf("ECMC_CAN_ERROR_PDO_TIMEOUT (0x%x)\n",errorCode_);
+  
+  if(rw_ == DIR_READ) {
+    if(exeCounter_* exeSampleTimeMs_ >= readTimeoutMs_) {
+      errorCode_ = ECMC_CAN_ERROR_PDO_TIMEOUT;
+      if(dbgMode_) {
+        printf("ECMC_CAN_ERROR_PDO_TIMEOUT (0x%x)\n",errorCode_);
+      }
+      exeCounter_ = 0;
     }
-    exeCounter_ = 0;
+  }
+  else {  //DIR_WRITE
+    if(writeCycleMs_<=0) {  // Only write on demand if cycle is less than 0
+      exeCounter_ = 0;
+      return;
+    }
+    if(exeCounter_* exeSampleTimeMs_ >= writeCycleMs_) {      
+      writePdoValue();  // write in defined cycle
+      exeCounter_ = 0;
+    }
   }
   return;
 }
@@ -80,7 +113,7 @@ void ecmcCANOpenPDO::printBuffer() {
   for(uint32_t i = 0; i < ODSize_; i = i + 2) {
     uint16_t test;
     memcpy(&test,&dataBuffer_[i],2);
-    printf("data[%d]: %u\n",i/2,test);
+    printf("data[%02d]: %u\n",i/2,test);
   }
 }
 
@@ -93,4 +126,15 @@ int ecmcCANOpenPDO::validateFrame(can_frame *frame) {
     return 0;
   }
   return 1;
+}
+
+void ecmcCANOpenPDO::setPdoValue(uint64_t data) {
+  memcpy(dataBuffer_, &data, ODSize_);
+}
+
+void ecmcCANOpenPDO::writePdoValue() {
+  if(writeFrame_.can_dlc > 0) {
+    memcpy(&(writeFrame_.data[0]), dataBuffer_ ,writeFrame_.can_dlc);
+  }
+  writeBuffer_->addWriteCAN(&writeFrame_);
 }

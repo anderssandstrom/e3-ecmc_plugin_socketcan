@@ -32,18 +32,22 @@ class ecmcCANOpenPDO {
                  uint32_t cobId,
                  ecmc_can_direction rw,
                  uint32_t ODSize,
-                 int readTimeoutMs, 
+                 int readTimeoutMs,
+                 int writeCycleMs,   //if <0 the write on demand..
                  int exeSampleTimeMs,
                  int dbgMode);
   ~ecmcCANOpenPDO();
   void execute();
   void newRxFrame(can_frame *frame);
+  void setPdoValue(uint64_t data);
+  void writePdoValue();
   
  private:
   int validateFrame(can_frame *frame);
   ecmcSocketCANWriteBuffer *writeBuffer_;
   uint32_t cobId_;   // with cobid
   int readTimeoutMs_;
+  int writeCycleMs_;
   int exeSampleTimeMs_;
   ecmc_can_direction rw_;
   uint32_t ODSize_;
@@ -53,6 +57,7 @@ class ecmcCANOpenPDO {
   int errorCode_;
   void printBuffer();
   int dbgMode_;
+  can_frame writeFrame_;
 };
 
 #endif  /* ECMC_CANOPEN_PDO_H_ */

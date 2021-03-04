@@ -107,6 +107,9 @@ class ecmcSocketCAN : public asynPortDriver {
   ecmcSocketCANWriteBuffer *writeBuffer_;
   ecmcCANOpenSDO *testSdo_;
   ecmcCANOpenPDO *testPdo_;
+  ecmcCANOpenPDO *lssPdo_;
+  ecmcCANOpenPDO *syncPdo_;
+  ecmcCANOpenPDO *heartPdo_;
 };
 
 #endif  /* ECMC_SOCKETCAN_H_ */

@@ -218,7 +218,7 @@ void ecmcCANOpenSDO::printBuffer() {
   for(uint32_t i = 0; i < ODSize_; i = i + 2) {
     uint16_t test;
     memcpy(&test,&dataBuffer_[i],2);
-    printf("data[%d]: %u\n",i/2,test);
+    printf("data[%02d]: %u\n",i/2,test);
   }
 }
 

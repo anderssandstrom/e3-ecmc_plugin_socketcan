@@ -79,6 +79,10 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   writeBuffer_ = NULL;
   testSdo_     = NULL;
   testPdo_     = NULL;
+  lssPdo_      = NULL;
+  syncPdo_     = NULL;
+  heartPdo_    = NULL;
+
   exeSampleTimeMs_ = exeSampleTimeMs;
   
   memset(&ifr_,0,sizeof(struct ifreq));
@@ -108,7 +112,24 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   }
   writeBuffer_ = new ecmcSocketCANWriteBuffer(socketId_, cfgDbgMode_);
   testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,5000,exeSampleTimeMs_, cfgDbgMode_);
-  testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,exeSampleTimeMs_, cfgDbgMode_);
+  testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,0,exeSampleTimeMs_, cfgDbgMode_);
+
+
+  // Test LSS heartbeat "master" signal. This makes the led on pmu905 to go to "Normal Communication"
+  // can0  0x7E5   [0]
+  lssPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x7E5,DIR_WRITE,0,0,1000,exeSampleTimeMs_, cfgDbgMode_);
+
+  
+  // Test sync signal
+  // can0  0x80   [0]
+  syncPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x80,DIR_WRITE,0,0,1000,exeSampleTimeMs_, cfgDbgMode_);
+
+  // Test heartbeat signal
+  // can0  0x701   [1]  05
+  //can_add_write(1793,1,5,0,0,0,0,0,0,0);
+  heartPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x701,DIR_WRITE,1,0,1000,exeSampleTimeMs_, cfgDbgMode_);
+  heartPdo_->setPdoValue(5);
+
   initAsyn();
 }
 
@@ -213,6 +234,16 @@ void ecmcSocketCAN::doReadWorker() {
     if(testPdo_) {
       testPdo_->newRxFrame(&rxmsg_);
     }
+    if(lssPdo_) {
+      lssPdo_->newRxFrame(&rxmsg_);
+    }
+    if(syncPdo_) {
+      syncPdo_->newRxFrame(&rxmsg_);
+    }    
+
+    if(heartPdo_) {
+      heartPdo_->newRxFrame(&rxmsg_);
+    }    
 
     if(cfgDbgMode_) {
       // Simulate candump printout
@@ -285,6 +316,18 @@ void  ecmcSocketCAN::execute() {
 
   if(testPdo_) {
     testPdo_->execute();
+  }
+
+  if(lssPdo_) {
+    lssPdo_->execute();
+  }
+
+  if(syncPdo_) {
+    syncPdo_->execute();
+  }
+
+  if(heartPdo_) {
+    heartPdo_->execute();
   }
 
   return;
