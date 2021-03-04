@@ -24,6 +24,9 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
+#define ECMC_CAN_ERROR_SDO_WRITE_BUSY 110
+
+
 class ecmcCANOpenSDO {
  public:
   ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
@@ -39,6 +42,8 @@ class ecmcCANOpenSDO {
   ~ecmcCANOpenSDO();
   void execute();
   void newRxFrame(can_frame *frame);
+  void setValue(uint8_t *data, size_t bytes);
+  int writeValue();
 
  private:
   int frameEqual(can_frame *frame1,can_frame *frame2);
@@ -55,16 +60,19 @@ class ecmcCANOpenSDO {
   ODLegthBytes ODLengthBytes_;
   ODIndexBytes ODIndexBytes_;
   int exeCounter_;
-  can_frame reqDataFrame_;
-  can_frame confReqFrameTg0_;
-  can_frame confReqFrameTg1_;
-  can_frame recConfRead_;
+  can_frame readReqTransferFrame_;
+  can_frame readConfReqFrameTg0_;
+  can_frame readConfReqFrameTg1_;
+  can_frame readSlaveConfFrame_;
+
+  can_frame writeReqTransferFrame_;
   int dbgMode_;
   int busy_;
   uint8_t *dataBuffer_;
   uint32_t recivedBytes_;
   int useTg1Frame_;
   ecmc_read_states readStates_;
+  ecmc_write_states writeStates_;
   void printBuffer();
 };
 

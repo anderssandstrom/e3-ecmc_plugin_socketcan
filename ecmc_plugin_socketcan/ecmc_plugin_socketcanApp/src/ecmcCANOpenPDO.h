@@ -39,8 +39,8 @@ class ecmcCANOpenPDO {
   ~ecmcCANOpenPDO();
   void execute();
   void newRxFrame(can_frame *frame);
-  void setPdoValue(uint64_t data);
-  void writePdoValue();
+  void setValue(uint64_t data);
+  int  writeValue();
   
  private:
   int validateFrame(can_frame *frame);

@@ -83,7 +83,7 @@ void ecmcCANOpenPDO::execute() {
       return;
     }
     if(exeCounter_* exeSampleTimeMs_ >= writeCycleMs_) {      
-      writePdoValue();  // write in defined cycle
+      writeValue();  // write in defined cycle
       exeCounter_ = 0;
     }
   }
@@ -128,13 +128,13 @@ int ecmcCANOpenPDO::validateFrame(can_frame *frame) {
   return 1;
 }
 
-void ecmcCANOpenPDO::setPdoValue(uint64_t data) {
+void ecmcCANOpenPDO::setValue(uint64_t data) {
   memcpy(dataBuffer_, &data, ODSize_);
 }
 
-void ecmcCANOpenPDO::writePdoValue() {
+int ecmcCANOpenPDO::writeValue() {
   if(writeFrame_.can_dlc > 0) {
     memcpy(&(writeFrame_.data[0]), dataBuffer_ ,writeFrame_.can_dlc);
   }
-  writeBuffer_->addWriteCAN(&writeFrame_);
+  return writeBuffer_->addWriteCAN(&writeFrame_);
 }

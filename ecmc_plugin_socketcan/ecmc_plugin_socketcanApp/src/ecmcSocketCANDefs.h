@@ -24,9 +24,17 @@ enum ecmc_can_direction {
     DIR_WRITE };
 
 enum ecmc_read_states {
-    IDLE,    
-    WAIT_FOR_REQ_CONF,
-    WAIT_FOR_DATA};
+    IDLE,
+    READ_REQ_TRANSFER,
+    READ_WAIT_FOR_CONF,
+    READ_WAIT_FOR_DATA};
+
+enum ecmc_write_states {
+    IDLE,
+    WRITE_REQ_TRANSFER,
+    WRITE_WAIT_FOR_CONF,
+    WRITE_DATA,
+};
 
 struct ODIndexBytes {
     char byte0:8;
