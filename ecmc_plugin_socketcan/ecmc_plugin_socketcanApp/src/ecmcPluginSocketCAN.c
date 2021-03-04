@@ -164,12 +164,7 @@ double can_connected() {
   return (double)getSocketCANConnectd();
 }
 
-// trigger all writes added to buffer
-//double can_trigg_writes() {
-//  return (double)triggWrites();
-//}
-
-// trigger all writes added to buffer
+// Error during last writes
 double can_last_writes_error() {
   return (double)getlastWritesError();
 }

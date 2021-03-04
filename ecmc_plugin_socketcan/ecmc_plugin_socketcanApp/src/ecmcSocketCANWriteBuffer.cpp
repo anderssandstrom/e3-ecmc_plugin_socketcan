@@ -31,16 +31,6 @@ void f_worker_write(void *obj) {
   canObj->doWriteWorker();
 }
 
-//void f_worker_trigger(void *obj) {
-//  if(!obj) {
-//    printf("%s/%s:%d: Error: Worker trigg thread ecmcSocketCANWriteBuffer object NULL..\n",
-//            __FILE__, __FUNCTION__, __LINE__);
-//    return;
-//  }
-//  ecmcSocketCANWriteBuffer * canObj = (ecmcSocketCANWriteBuffer*)obj;
-//  canObj->doTriggerWorker();
-//}
-
 /** ecmc ecmcSocketCANWriteBuffer class
 */
 ecmcSocketCANWriteBuffer::ecmcSocketCANWriteBuffer(int socketId, int cfgDbgMode) {
@@ -67,28 +57,12 @@ ecmcSocketCANWriteBuffer::ecmcSocketCANWriteBuffer(int socketId, int cfgDbgMode)
   if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_write, this) == NULL) {
     throw std::runtime_error("Error: Failed create worker thread for write().");
   }
-  
-  //threadname = "ecmc." ECMC_PLUGIN_ASYN_PREFIX".write_trigg";
-  //if(epicsThreadCreate(threadname.c_str(), 0, 32768, f_worker_trigger, this) == NULL) {
-  //  throw std::runtime_error("Error: Failed create worker thread for write trigger.");
-  //}
 }
 
 ecmcSocketCANWriteBuffer::~ecmcSocketCANWriteBuffer() {
   // kill worker
   destructs_ = 1;  // maybe need todo in other way..
-  //doWriteEvent_.signal();
 }
-
-//void ecmcSocketCANWriteBuffer::doTriggerWorker() {  
-//  while(true) {    
-//    if(destructs_) {
-//      return;
-//    }
-//    nanosleep(&writePauseTime_,NULL);    
-//    triggWrites();
-//  }
-//}
 
 // Write socket worker thread (switch between two buffers)
 void ecmcSocketCANWriteBuffer::doWriteWorker() {
@@ -252,19 +226,6 @@ int ecmcSocketCANWriteBuffer::switchBuffer() {
   epicsMutexUnlock(bufferSwitchMutex_);
   return 0;
 }
-
-// Trigger all writes
-//int ecmcSocketCANWriteBuffer::triggWrites() {
-//  
-//  if(writeBusy_) {
-//    return ECMC_CAN_ERROR_WRITE_BUSY;
-//  }
-//  writeBusy_ = 1;
-//  switchBuffer();
-//  lastWriteSumError_ = 0;
-//  doWriteEvent_.signal(); // let worker start
-//  return 0;
-//}
 
 // Write to socket
 int ecmcSocketCANWriteBuffer::writeCAN(can_frame *frame){

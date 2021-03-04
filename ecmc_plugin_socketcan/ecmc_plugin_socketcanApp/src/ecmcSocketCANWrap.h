@@ -38,14 +38,6 @@ int connectSocketCAN();
  */
 int getSocketCANConnectd();
 
-/** \brief Write all buffered writes to CAN
- */
-//int triggWrites();
-
-/** \brief Busy writing\n
-  */
-int getWriteBusy();
-
 /** \brief Get last error from writes\n
   */
 int getlastWritesError();

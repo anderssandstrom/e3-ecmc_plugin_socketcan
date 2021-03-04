@@ -237,22 +237,6 @@ void ecmcSocketCAN::doConnectWorker() {
     connectPrivate();
   }
 }
-// struct byte0 {
-//   char ccs      : 3;
-//   char reserved : 1;
-//   char n        : 2;
-//   char e        : 1;
-//   char s        : 1;
-// }
-
-// int ecmcSocketCAN::triggWrites() {
-//   if(!writeBuffer_) { 
-//     return ECMC_CAN_ERROR_WRITE_BUFFER_NULL;
-//   }
-
-//   writeBuffer_->triggWrites();
-//   return 0;
-// }
 
 int ecmcSocketCAN::getlastWritesError() {
   if(!writeBuffer_) { 
@@ -275,7 +259,7 @@ int ecmcSocketCAN::addWriteCAN(uint32_t canId,
   if(!writeBuffer_) { 
     return ECMC_CAN_ERROR_WRITE_BUFFER_NULL;
   }
-  
+
   writeBuffer_->addWriteCAN(canId,
                             len,
                             data0,

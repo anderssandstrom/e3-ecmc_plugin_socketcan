@@ -120,7 +120,6 @@ void ecmcCANOpenSDO::execute() {
       printf("readStates_ = WAIT_FOR_REQ_CONF!!!\n");
 
       writeBuffer_->addWriteCAN(&reqDataFrame_);
-      //writeBuffer_->triggWrites();
     }
   }
 }
@@ -145,8 +144,6 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
         readStates_ = WAIT_FOR_DATA; //Next frame should be data!
         printf("readStates_ = WAIT_FOR_DATA!!!\n");
         writeBuffer_->addWriteCAN(&confReqFrameTg0_);  // Send tg0 frame and wait for data, also size must match to go ahead
-        //writeBuffer_->triggWrites();
-
         useTg1Frame_ = 1;
         break;
 
@@ -167,7 +164,6 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
             writeBuffer_->addWriteCAN(&confReqFrameTg0_);
             useTg1Frame_ = 1;
           }
-          //writeBuffer_->triggWrites();
         }
         printf("recivedBytes = %d!!!\n",recivedBytes_);
         
