@@ -120,7 +120,7 @@ void ecmcCANOpenSDO::execute() {
       recivedBytes_ = 0;
       readStates_ = WAIT_FOR_REQ_CONF;
       if(dbgMode_) {
-        printf("readStates_ = WAIT_FOR_REQ_CONF!!!\n");
+        printf("STATE = WAIT_FOR_REQ_CONF\n");
       }
       writeBuffer_->addWriteCAN(&reqDataFrame_);
     }
@@ -140,15 +140,15 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
      case WAIT_FOR_REQ_CONF:
         // Compare to the conf frame.. might not always be correct
         if ( !frameEqual(&recConfRead_,frame)) {
-          if(dbgMode_) {
-            printf("frame not equal\n");
-          }
+//          if(dbgMode_) {
+//            printf("frame not equal\n");
+//          }
           // Not "my frame", wait for new
           return;
         }
         readStates_ = WAIT_FOR_DATA; //Next frame should be data!
         if(dbgMode_) {
-          printf("readStates_ = WAIT_FOR_DATA!!!\n");
+          printf("STATE = WAIT_FOR_DATA\n");
         }
         writeBuffer_->addWriteCAN(&confReqFrameTg0_);  // Send tg0 frame and wait for data, also size must match to go ahead
         useTg1Frame_ = 1;
@@ -173,14 +173,14 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
           }
         }
         if(dbgMode_) {
-          printf("recivedBytes = %d!!!\n",recivedBytes_);
+          printf("recived bytes = %d\n",recivedBytes_);
         }
         
         if (recivedBytes_ == ODSize_) {
           readStates_ =IDLE;
           busy_ = 0;
           if(dbgMode_) {
-            printf("All data transfered\n");
+            printf("All data transfered for SDO.\n");
             printBuffer();
           }
         }
@@ -220,7 +220,6 @@ void ecmcCANOpenSDO::printBuffer() {
     memcpy(&test,&dataBuffer_[i],2);
     printf("data[%d]: %u\n",i/2,test);
   }
-  printf("\n");
 }
 
 //# w 0x603 [8] 0x40 0x40 0x26 0x00 0x00 0x00 0x00 0x00

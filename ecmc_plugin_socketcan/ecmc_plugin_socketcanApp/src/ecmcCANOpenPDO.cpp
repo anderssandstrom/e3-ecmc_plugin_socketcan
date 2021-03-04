@@ -82,7 +82,6 @@ void ecmcCANOpenPDO::printBuffer() {
     memcpy(&test,&dataBuffer_[i],2);
     printf("data[%d]: %u\n",i/2,test);
   }
-  printf("\n");
 }
 
 // r 0x183 [8] 0x00 0x00 0x00 0x00 0x0B 0x40 0x04 0x20
