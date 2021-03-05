@@ -24,13 +24,13 @@ enum ecmc_can_direction {
     DIR_WRITE };
 
 enum ecmc_read_states {
-    IDLE,
+    READ_IDLE,
     READ_REQ_TRANSFER,
     READ_WAIT_FOR_CONF,
     READ_WAIT_FOR_DATA};
 
 enum ecmc_write_states {
-    IDLE,
+    WRITE_IDLE,
     WRITE_REQ_TRANSFER,
     WRITE_WAIT_FOR_CONF,
     WRITE_DATA,

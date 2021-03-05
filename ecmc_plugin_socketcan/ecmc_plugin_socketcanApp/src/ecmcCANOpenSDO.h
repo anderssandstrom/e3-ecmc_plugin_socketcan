@@ -47,6 +47,10 @@ class ecmcCANOpenSDO {
 
  private:
   int frameEqual(can_frame *frame1,can_frame *frame2);
+  int readDataStateMachine(can_frame *frame);
+  int writeDataStateMachine(can_frame *frame);
+  int writeNextDataToSlave(int useToggle);
+  int writeWaitForDataConfFrame(int useToggle, can_frame *frame);
 
   ecmcSocketCANWriteBuffer *writeBuffer_;
   uint32_t cobIdRx_;   // with cobid
@@ -66,6 +70,11 @@ class ecmcCANOpenSDO {
   can_frame readSlaveConfFrame_;
 
   can_frame writeReqTransferFrame_;
+  can_frame writeSlaveConfCmdFrame_;
+  can_frame writeDataFrame_;
+  can_frame writeConfReqFrameTg0_;
+  can_frame writeConfReqFrameTg1_;
+  
   int dbgMode_;
   int busy_;
   uint8_t *dataBuffer_;
@@ -74,6 +83,7 @@ class ecmcCANOpenSDO {
   ecmc_read_states readStates_;
   ecmc_write_states writeStates_;
   void printBuffer();
+  uint32_t writtenBytes_;
 };
 
 #endif  /* ECMC_CANOPEN_SDO_H_ */

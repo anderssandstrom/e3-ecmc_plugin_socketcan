@@ -17,6 +17,8 @@
 #include <sstream>
 #include "ecmcCANOpenSDO.h"
 
+#define ECMC_SDO_TRANSFER_MAX_BYTES 7
+
 /** 
  * ecmc ecmcCANOpenSDO class
 */
@@ -48,8 +50,9 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   exeCounter_         = 0;
   busy_               = 0;
   recivedBytes_       = 0;
-  readStates_         = IDLE;
-  writeStates_        = IDLE;
+  writtenBytes_       = 0; 
+  readStates_         = READ_IDLE;
+  writeStates_        = WRITE_IDLE;
   useTg1Frame_        = 1;
   dataBuffer_         = new uint8_t(ODSize_);
 
@@ -117,16 +120,52 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeReqTransferFrame_.data[7] = ODLengthBytes_.byte3;
 
   // Slave write confirm frame
-  writeSlaveConfFrame_.can_id  = cobIdTx;
-  writeSlaveConfFrame_.can_dlc = 8;     // data length
-  writeSlaveConfFrame_.data[0] = 0x60;  // confirm frame for write
-  writeSlaveConfFrame_.data[1] = ODIndexBytes_.byte0;
-  writeSlaveConfFrame_.data[2] = ODIndexBytes_.byte1;
-  writeSlaveConfFrame_.data[3] = ODSubIndex_;
-  writeSlaveConfFrame_.data[4] = 0;
-  writeSlaveConfFrame_.data[5] = 0;
-  writeSlaveConfFrame_.data[6] = 0;
-  writeSlaveConfFrame_.data[7] = 0;
+  writeSlaveConfCmdFrame_.can_id  = cobIdRx;
+  writeSlaveConfCmdFrame_.can_dlc = 8;     // data length
+  writeSlaveConfCmdFrame_.data[0] = 0x60;  // confirm frame for write
+  writeSlaveConfCmdFrame_.data[1] = ODIndexBytes_.byte0;
+  writeSlaveConfCmdFrame_.data[2] = ODIndexBytes_.byte1;
+  writeSlaveConfCmdFrame_.data[3] = ODSubIndex_;
+  writeSlaveConfCmdFrame_.data[4] = 0;
+  writeSlaveConfCmdFrame_.data[5] = 0;
+  writeSlaveConfCmdFrame_.data[6] = 0;
+  writeSlaveConfCmdFrame_.data[7] = 0;
+
+  // Data frame base
+  writeDataFrame_.can_id  = cobIdTx;
+  writeDataFrame_.can_dlc = 8;     // data length
+  writeDataFrame_.data[0] = 0;     // need to toggle here
+  writeDataFrame_.data[1] = 0;
+  writeDataFrame_.data[2] = 0;
+  writeDataFrame_.data[3] = 0;
+  writeDataFrame_.data[4] = 0;
+  writeDataFrame_.data[5] = 0;
+  writeDataFrame_.data[6] = 0;
+  writeDataFrame_.data[7] = 0;
+
+  // Slave write confirm frame TG0
+  writeConfReqFrameTg0_.can_id  = cobIdRx;
+  writeConfReqFrameTg0_.can_dlc = 8;     // data length
+  writeConfReqFrameTg0_.data[0] = 0x20;  // Toggle 0
+  writeConfReqFrameTg0_.data[1] = 0;
+  writeConfReqFrameTg0_.data[2] = 0;
+  writeConfReqFrameTg0_.data[3] = 0;
+  writeConfReqFrameTg0_.data[4] = 0;
+  writeConfReqFrameTg0_.data[5] = 0;
+  writeConfReqFrameTg0_.data[6] = 0;
+  writeConfReqFrameTg0_.data[7] = 0;
+
+  // Slave write confirm frame TG1
+  writeConfReqFrameTg1_.can_id  = cobIdRx;
+  writeConfReqFrameTg1_.can_dlc = 8;     // data length
+  writeConfReqFrameTg1_.data[0] = 0x30;  // Toggle 1
+  writeConfReqFrameTg1_.data[1] = 0;
+  writeConfReqFrameTg1_.data[2] = 0;
+  writeConfReqFrameTg1_.data[3] = 0;
+  writeConfReqFrameTg1_.data[4] = 0;
+  writeConfReqFrameTg1_.data[5] = 0;
+  writeConfReqFrameTg1_.data[6] = 0;
+  writeConfReqFrameTg1_.data[7] = 0;  
 }
 
 ecmcCANOpenSDO::~ecmcCANOpenSDO() {
@@ -162,120 +201,172 @@ void ecmcCANOpenSDO::execute() {
 void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
   // Wait for:
   // # r 0x583 [8] 0x41 0x40 0x26 0x00 0x38 0x00 0x00 0x00
+  int errorCode = 0;
   if(!busy_) {
-    // Not waiting for any data
+    // Not waiting for any data..
     return;
   }
 
+  // Esnure that frame is from slave
+  if(frame->can_id != cobIdTx_) {
+    return; // not correct frame NEED MORE CHECKS HERE!! Ensure correct and not error frame
+  }
+
   if(rw_ == DIR_READ) {
-    switch(readStates_) {
-     case READ_WAIT_FOR_CONF:
-        // Compare to the conf frame.. might not always be correct
-        if ( !frameEqual(&readSlaveConfFrame_,frame)) {
-          return;
-        }
-        readStates_ = READ_WAIT_FOR_DATA; //Next frame should be data!
-        if(dbgMode_) {
-          printf("STATE = READ_WAIT_FOR_DATA\n");
-        }
-        writeBuffer_->addWriteCAN(&readConfReqFrameTg0_);  // Send tg0 frame and wait for data, also size must match to go ahead
-        useTg1Frame_ = 1;
-        break;
+    errorCode = readDataStateMachine(frame);
+  }  
+  else { // Write
+    errorCode = writeDataStateMachine(frame);
+  }
+}
 
-      case READ_WAIT_FOR_DATA:
-        if(frame->can_id != cobIdTx_) {
-          return; // not correct frame
+int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
+  int bytesToRead = 0;
+  switch(readStates_) {
+    case READ_WAIT_FOR_CONF:
+      // Compare to the conf frame.. might not always be correct  NEED MORE CHECKS HERE!!
+      if (!frameEqual(&readSlaveConfFrame_,frame)) {
+        return 0;
+      }
+      readStates_ = READ_WAIT_FOR_DATA; //Next frame should be data!
+      if(dbgMode_) {
+        printf("STATE = READ_WAIT_FOR_DATA\n");
+      }
+      writeBuffer_->addWriteCAN(&readConfReqFrameTg0_);  // Send tg0 frame and wait for data, also size must match to go ahead
+      useTg1Frame_ = 1;
+      break;
+    case READ_WAIT_FOR_DATA:
+      //Add data to buffer
+      bytesToRead = frame->can_dlc-1;
+      if( bytesToRead > ECMC_SDO_TRANSFER_MAX_BYTES) {
+        bytesToRead = ECMC_SDO_TRANSFER_MAX_BYTES;
+      }
+      
+      if(bytesToRead + recivedBytes_ <= ODSize_) {
+        memcpy(dataBuffer_ + recivedBytes_, &(frame->data[1]),bytesToRead);
+        recivedBytes_ += bytesToRead;
+      }
+      if(recivedBytes_ < ODSize_) {  // Ask for more data but must toggle so alternat the prepared frames
+        if(useTg1Frame_) {
+          writeBuffer_->addWriteCAN(&readConfReqFrameTg1_);
+          useTg1Frame_ = 0;
+        } else {
+          writeBuffer_->addWriteCAN(&readConfReqFrameTg0_);
+          useTg1Frame_ = 1;
         }
-        //Add data to buffer
-        if(frame->can_dlc-1 + recivedBytes_ <= ODSize_) {
-          memcpy(dataBuffer_ + recivedBytes_, &(frame->data[1]),frame->can_dlc-1);
-          recivedBytes_ += frame->can_dlc-1;
-        }
-        if(recivedBytes_ < ODSize_) {  // Ask for more data but must toggle so alternat the prepared frames
-          if(useTg1Frame_) {
-            writeBuffer_->addWriteCAN(&readConfReqFrameTg1_);
-            useTg1Frame_ = 0;
-          } else {
-            writeBuffer_->addWriteCAN(&readConfReqFrameTg0_);
-            useTg1Frame_ = 1;
-          }
-        }
+      }
+      if(dbgMode_) {
+        printf("recived bytes = %d\n",recivedBytes_);
+      }
+      
+      if (recivedBytes_ >= ODSize_) {
+        readStates_ =READ_IDLE;
+        busy_ = 0;
+        useTg1Frame_ = 0;
         if(dbgMode_) {
-          printf("recived bytes = %d\n",recivedBytes_);
+          printf("STATE = READ_IDLE\n");
+          printf("All data read from slave SDO.\n");
+          printBuffer();            
         }
-        
-        if (recivedBytes_ == ODSize_) {
-          readStates_ =IDLE;
-          busy_ = 0;
-          if(dbgMode_) {
-            printf("All data transfered for SDO.\n");
-            printBuffer();
-          }
-        }
+        return 0;
+      }
+      break;
+    default:
+      return 0;
+      break;
+  }
+  return 0;
+}
 
-        break;
-      default:
-        return;
-        break;
-    }
+int ecmcCANOpenSDO::writeDataStateMachine(can_frame *frame) {
+  int bytes = 0;
+  switch(writeStates_) {
+    case WRITE_WAIT_FOR_CONF:
+      
+      writtenBytes_ = 0;
+      useTg1Frame_ = 0;
+      // Compare to the conf frame.. might not always be correct MORE TESTS NEEDED HERE!!!!
+      if ( !frameEqual(&writeSlaveConfCmdFrame_,frame)) {
+        return 0;
+      }
+
+      writeNextDataToSlave(useTg1Frame_);
+      writeStates_ = WRITE_DATA; //Next frame should be data!
+      if(dbgMode_) {
+        printf("STATE = WRITE_DATA\n");
+      }
+
+      break;
+
+    case WRITE_DATA:
+
+      // Wait for writeConfReqFrameTgX_ from from slave (toggle X = 1 or 0)
+      if(!writeWaitForDataConfFrame(useTg1Frame_, frame)) {
+          return 0;
+      }
+
+      // next frame use the other toggle option
+      useTg1Frame_ = !useTg1Frame_;
+      bytes = writeNextDataToSlave(useTg1Frame_);
+
+      if(writtenBytes_ >= ODSize_) {
+        writeStates_ = WRITE_IDLE;
+        useTg1Frame_ = 0;
+        busy_ = 0;
+        if(dbgMode_) {
+          printf("STATE = WRITE_IDLE\n");
+          printf("All data written to slave SDO.\n");
+          printBuffer();          
+        }
+        return 0;
+      }
+      break;
+    default:
+      return 0;
+      break;
+  }
+  return 0;
+}
+
+// Return Number of bytes written if 0 then we are done!
+int ecmcCANOpenSDO::writeNextDataToSlave(int useToggle) {
+
+  // How many bytes should we write
+  int bytesToWrite = ODSize_-writtenBytes_;
+  if(bytesToWrite>ECMC_SDO_TRANSFER_MAX_BYTES) {
+    bytesToWrite = ECMC_SDO_TRANSFER_MAX_BYTES;          
+  }
+  if (bytesToWrite<=0) {
+    return 0;
+  }
+  //Copy data to frame (start at element 1 since toggle is at data 0)
+  memcpy(&(writeDataFrame_.data[1]),dataBuffer_ + writtenBytes_,bytesToWrite);
+  writeDataFrame_.can_dlc = bytesToWrite + 1; // need to include the toggle byte
+  // add toggle byte (start with toggle 0)
+  if(useToggle) {
+    writeDataFrame_.data[0] = 0x30; // toggle 1
+  } else {
+    writeDataFrame_.data[0] = 0x20; // toggle 0
   }
 
-  // Write
+  writeBuffer_->addWriteCAN(&writeDataFrame_);  // Send first data frame
+  writtenBytes_ += bytesToWrite;
+  return bytesToWrite;
+}
+
+int ecmcCANOpenSDO::writeWaitForDataConfFrame(int useToggle, can_frame *frame) { 
+  // Wait for writeConfReqFrameTg0_ from from slave (toggle 1 or 0)
+  if (useToggle) {
+    if (frameEqual(&writeConfReqFrameTg1_,frame)) {          
+      return 1;
+    }
+  }
   else {
-    switch(writeStates_) {
-     case WRITE_WAIT_FOR_CONF:
-        // Compare to the conf frame.. might not always be correct
-        if ( !frameEqual(&writeSlaveConfFrame_,frame)) {
-          return;
-        }
-
-        readStates_ = WRITE_DATA; //Next frame should be data!
-        if(dbgMode_) {
-          printf("STATE = READ_WAIT_FOR_DATA\n");
-        }
-        writeBuffer_->addWriteCAN(&readConfReqFrameTg0_);  // Send first data frame
-        
-        useTg1Frame_ = 1;
-        break;
-
-      case READ_WAIT_FOR_DATA:
-        if(frame->can_id != cobIdTx_) {
-          return; // not correct frame
-        }
-        //Add data to buffer
-        if(frame->can_dlc-1 + recivedBytes_ <= ODSize_) {
-          memcpy(dataBuffer_ + recivedBytes_, &(frame->data[1]),frame->can_dlc-1);
-          recivedBytes_ += frame->can_dlc-1;
-        }
-        if(recivedBytes_ < ODSize_) {  // Ask for more data but must toggle so alternat the prepared frames
-          if(useTg1Frame_) {
-            writeBuffer_->addWriteCAN(&readConfReqFrameTg1_);
-            useTg1Frame_ = 0;
-          } else {
-            writeBuffer_->addWriteCAN(&readConfReqFrameTg0_);
-            useTg1Frame_ = 1;
-          }
-        }
-        if(dbgMode_) {
-          printf("recived bytes = %d\n",recivedBytes_);
-        }
-        
-        if (recivedBytes_ == ODSize_) {
-          readStates_ =IDLE;
-          busy_ = 0;
-          if(dbgMode_) {
-            printf("All data transfered for SDO.\n");
-            printBuffer();
-          }
-        }
-
-        break;
-      default:
-        return;
-        break;
+    if (frameEqual(&writeConfReqFrameTg0_,frame)) {          
+      return 1;
     }
   }
-
+  return 0;
 }
 
 int ecmcCANOpenSDO::frameEqual(can_frame *frame1,can_frame *frame2) {
@@ -320,7 +411,7 @@ void ecmcCANOpenSDO::setValue(uint8_t *data, size_t bytes) {
 
 int ecmcCANOpenSDO::writeValue() {
   // Busy right now!
-  if(busy_ || writeStates_ != IDLE ) {
+  if(busy_ || writeStates_ != WRITE_IDLE ) {
     return ECMC_CAN_ERROR_SDO_WRITE_BUSY;
   }
   busy_ = 1;

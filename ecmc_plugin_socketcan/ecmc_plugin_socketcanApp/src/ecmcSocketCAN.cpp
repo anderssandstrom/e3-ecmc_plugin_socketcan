@@ -128,7 +128,7 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   // can0  0x701   [1]  05
   //can_add_write(1793,1,5,0,0,0,0,0,0,0);
   heartPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x701,DIR_WRITE,1,0,1000,exeSampleTimeMs_, cfgDbgMode_);
-  heartPdo_->setPdoValue(5);
+  heartPdo_->setValue(5);
 
   initAsyn();
 }
