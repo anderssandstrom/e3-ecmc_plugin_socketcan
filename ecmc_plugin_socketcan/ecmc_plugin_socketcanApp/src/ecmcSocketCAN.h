@@ -110,6 +110,8 @@ class ecmcSocketCAN : public asynPortDriver {
   ecmcCANOpenPDO *lssPdo_;
   ecmcCANOpenPDO *syncPdo_;
   ecmcCANOpenPDO *heartPdo_;
+  ecmcCANOpenSDO *basicConfSdo_;
+  int cycleCounter_;
 };
 
 #endif  /* ECMC_SOCKETCAN_H_ */

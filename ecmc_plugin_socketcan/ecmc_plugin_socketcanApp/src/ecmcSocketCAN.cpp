@@ -82,6 +82,8 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   lssPdo_      = NULL;
   syncPdo_     = NULL;
   heartPdo_    = NULL;
+  basicConfSdo_ = NULL;
+  cycleCounter_ = 0;
 
   exeSampleTimeMs_ = exeSampleTimeMs;
   
@@ -130,6 +132,18 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   heartPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x701,DIR_WRITE,1,0,1000,exeSampleTimeMs_, cfgDbgMode_);
   heartPdo_->setValue(5);
 
+  basicConfSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_WRITE,0x2690,1,7,0,exeSampleTimeMs_, cfgDbgMode_);
+  //byte0 = 0
+  //byte1 = 0
+  //byte2 = 0
+  //byte 3,4 = 5000
+  //byte 5 =0
+  //byte 6 =0
+  //byte 7 =0
+  // => 0x1388000
+  uint64_t tempVal = 0x1388000;
+  uint8_t * val = (uint8_t*)&tempVal;
+  basicConfSdo_->setValue(val,7);
   initAsyn();
 }
 
@@ -228,9 +242,9 @@ void ecmcSocketCAN::doReadWorker() {
 
     // TODO MUST CHECK RETRUN VALUE OF READ!!!!!  
     read(socketId_, &rxmsg_, sizeof(rxmsg_));
-    if(testSdo_) {
-      testSdo_->newRxFrame(&rxmsg_);
-    }
+    //if(testSdo_) {
+    //  testSdo_->newRxFrame(&rxmsg_);
+    //}
     if(testPdo_) {
       testPdo_->newRxFrame(&rxmsg_);
     }
@@ -245,6 +259,10 @@ void ecmcSocketCAN::doReadWorker() {
       heartPdo_->newRxFrame(&rxmsg_);
     }    
 
+    if(basicConfSdo_) {
+      basicConfSdo_->newRxFrame(&rxmsg_);
+    }
+ 
     if(cfgDbgMode_) {
       // Simulate candump printout
       printf("r 0x%03X", rxmsg_.can_id);
@@ -310,9 +328,9 @@ int ecmcSocketCAN::addWriteCAN(uint32_t canId,
   
 void  ecmcSocketCAN::execute() {
 
-  if(testSdo_) {
-    testSdo_->execute();
-  }
+  //if(testSdo_) {
+  //  testSdo_->execute();
+ // }
 
   if(testPdo_) {
     testPdo_->execute();
@@ -329,6 +347,18 @@ void  ecmcSocketCAN::execute() {
   if(heartPdo_) {
     heartPdo_->execute();
   }
+
+  cycleCounter_++;
+  if(basicConfSdo_) {
+    basicConfSdo_->execute();
+    if(cycleCounter_ > 10000) {
+      cycleCounter_ = 0;
+      printf("################################### TEST WRITE SDO#############\n");
+      basicConfSdo_->writeValue();
+    }
+    
+  }
+
 
   return;
 }

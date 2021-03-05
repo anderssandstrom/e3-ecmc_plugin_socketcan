@@ -108,7 +108,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   readSlaveConfFrame_.data[7] = ODLengthBytes_.byte3;
 
   // Request write to slave
-  writeReqTransferFrame_.can_id  = cobIdTx;
+  writeReqTransferFrame_.can_id  = cobIdRx;
   writeReqTransferFrame_.can_dlc = 8;     // data length
   writeReqTransferFrame_.data[0] = 0x21;  // Write cmd
   writeReqTransferFrame_.data[1] = ODIndexBytes_.byte0;
@@ -120,7 +120,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeReqTransferFrame_.data[7] = ODLengthBytes_.byte3;
 
   // Slave write confirm frame
-  writeSlaveConfCmdFrame_.can_id  = cobIdRx;
+  writeSlaveConfCmdFrame_.can_id  = cobIdTx;
   writeSlaveConfCmdFrame_.can_dlc = 8;     // data length
   writeSlaveConfCmdFrame_.data[0] = 0x60;  // confirm frame for write
   writeSlaveConfCmdFrame_.data[1] = ODIndexBytes_.byte0;
@@ -132,7 +132,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeSlaveConfCmdFrame_.data[7] = 0;
 
   // Data frame base
-  writeDataFrame_.can_id  = cobIdTx;
+  writeDataFrame_.can_id  = cobIdRx;
   writeDataFrame_.can_dlc = 8;     // data length
   writeDataFrame_.data[0] = 0;     // need to toggle here
   writeDataFrame_.data[1] = 0;
@@ -144,7 +144,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeDataFrame_.data[7] = 0;
 
   // Slave write confirm frame TG0
-  writeConfReqFrameTg0_.can_id  = cobIdRx;
+  writeConfReqFrameTg0_.can_id  = cobIdTx;
   writeConfReqFrameTg0_.can_dlc = 8;     // data length
   writeConfReqFrameTg0_.data[0] = 0x20;  // Toggle 0
   writeConfReqFrameTg0_.data[1] = 0;
@@ -156,7 +156,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeConfReqFrameTg0_.data[7] = 0;
 
   // Slave write confirm frame TG1
-  writeConfReqFrameTg1_.can_id  = cobIdRx;
+  writeConfReqFrameTg1_.can_id  = cobIdTx;
   writeConfReqFrameTg1_.can_dlc = 8;     // data length
   writeConfReqFrameTg1_.data[0] = 0x30;  // Toggle 1
   writeConfReqFrameTg1_.data[1] = 0;
@@ -279,6 +279,7 @@ int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
 }
 
 int ecmcCANOpenSDO::writeDataStateMachine(can_frame *frame) {
+  printf("writeDataStateMachine\n");
   int bytes = 0;
   switch(writeStates_) {
     case WRITE_WAIT_FOR_CONF:
@@ -305,10 +306,7 @@ int ecmcCANOpenSDO::writeDataStateMachine(can_frame *frame) {
           return 0;
       }
 
-      // next frame use the other toggle option
-      useTg1Frame_ = !useTg1Frame_;
-      bytes = writeNextDataToSlave(useTg1Frame_);
-
+      // Check if write was done already or if more frames are needed!
       if(writtenBytes_ >= ODSize_) {
         writeStates_ = WRITE_IDLE;
         useTg1Frame_ = 0;
@@ -320,6 +318,11 @@ int ecmcCANOpenSDO::writeDataStateMachine(can_frame *frame) {
         }
         return 0;
       }
+
+      // next frame use the other toggle option
+      useTg1Frame_ = !useTg1Frame_;
+      bytes = writeNextDataToSlave(useTg1Frame_);
+
       break;
     default:
       return 0;
@@ -339,15 +342,28 @@ int ecmcCANOpenSDO::writeNextDataToSlave(int useToggle) {
   if (bytesToWrite<=0) {
     return 0;
   }
+
+  // seems byte 0 should be: 000tnnnc
+  // t toggle bit
+  // nnn bytes that do NOT contain data
+  // c for last write, Then no more communication
+  
+  writeCmdByte temp;
+  temp.notused=0;
+  temp.nnn = 7-bytesToWrite;
+  temp.c = writtenBytes_+bytesToWrite >= ODSize_;
+  temp.t = useToggle;
+  memcpy(&(writeDataFrame_.data[0]),&temp,1);
+
   //Copy data to frame (start at element 1 since toggle is at data 0)
   memcpy(&(writeDataFrame_.data[1]),dataBuffer_ + writtenBytes_,bytesToWrite);
   writeDataFrame_.can_dlc = bytesToWrite + 1; // need to include the toggle byte
   // add toggle byte (start with toggle 0)
-  if(useToggle) {
-    writeDataFrame_.data[0] = 0x30; // toggle 1
-  } else {
-    writeDataFrame_.data[0] = 0x20; // toggle 0
-  }
+  //if(useToggle) {
+  //  writeDataFrame_.data[0] = 0x70; // toggle 1
+  //} else {
+  //  writeDataFrame_.data[0] = 0x60; // toggle 0
+  //}
 
   writeBuffer_->addWriteCAN(&writeDataFrame_);  // Send first data frame
   writtenBytes_ += bytesToWrite;
@@ -411,6 +427,7 @@ void ecmcCANOpenSDO::setValue(uint8_t *data, size_t bytes) {
 
 int ecmcCANOpenSDO::writeValue() {
   // Busy right now!
+  printf("WRITEVALUE!!\n");
   if(busy_ || writeStates_ != WRITE_IDLE ) {
     return ECMC_CAN_ERROR_SDO_WRITE_BUSY;
   }
@@ -427,6 +444,7 @@ int ecmcCANOpenSDO::writeValue() {
   if(dbgMode_) {
     printf("STATE = WRITE_WAIT_FOR_CONF\n");
   }
+  return 0;
   // State machine is now in rx frame()
 }
 

@@ -48,6 +48,13 @@ struct ODLegthBytes {
     char byte3:8;
 };
 
+struct writeCmdByte {
+    char c:1;
+    char nnn:3;
+    char t:1;
+    char notused:3;
+};
+
 /** Just one error code in "c" part of plugin 
 (error handled with exceptions i c++ part) */
 #define ECMC_PLUGIN_SOCKETCAN_ERROR_CODE 1

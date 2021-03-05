@@ -27,6 +27,7 @@
 #define ECMC_CAN_ERROR_SDO_WRITE_BUSY 110
 
 
+
 class ecmcCANOpenSDO {
  public:
   ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
