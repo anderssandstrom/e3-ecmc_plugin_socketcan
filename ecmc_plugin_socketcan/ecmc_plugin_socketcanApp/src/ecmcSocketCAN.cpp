@@ -113,7 +113,7 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
     connectPrivate();
   }
   writeBuffer_ = new ecmcSocketCANWriteBuffer(socketId_, cfgDbgMode_);
-  testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,5000,exeSampleTimeMs_, cfgDbgMode_);
+  testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,7000,exeSampleTimeMs_, cfgDbgMode_);
   testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,0,exeSampleTimeMs_, cfgDbgMode_);
 
 
@@ -242,9 +242,9 @@ void ecmcSocketCAN::doReadWorker() {
 
     // TODO MUST CHECK RETRUN VALUE OF READ!!!!!  
     read(socketId_, &rxmsg_, sizeof(rxmsg_));
-    //if(testSdo_) {
-    //  testSdo_->newRxFrame(&rxmsg_);
-    //}
+    if(testSdo_) {
+      testSdo_->newRxFrame(&rxmsg_);
+    }
     if(testPdo_) {
       testPdo_->newRxFrame(&rxmsg_);
     }
@@ -328,9 +328,9 @@ int ecmcSocketCAN::addWriteCAN(uint32_t canId,
   
 void  ecmcSocketCAN::execute() {
 
-  //if(testSdo_) {
-  //  testSdo_->execute();
- // }
+  if(testSdo_) {
+    testSdo_->execute();
+  }
 
   if(testPdo_) {
     testPdo_->execute();
