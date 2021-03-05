@@ -343,28 +343,18 @@ int ecmcCANOpenSDO::writeNextDataToSlave(int useToggle) {
     return 0;
   }
 
-  // seems byte 0 should be: 000tnnnc
+  // seems byte 0 should be: 000tnnnc (found in canopennode source docs)
   // t toggle bit
   // nnn bytes that do NOT contain data
   // c for last write, Then no more communication
-  
   writeCmdByte temp;
   temp.notused=0;
   temp.nnn = 7-bytesToWrite;
   temp.c = writtenBytes_+bytesToWrite >= ODSize_;
   temp.t = useToggle;
   memcpy(&(writeDataFrame_.data[0]),&temp,1);
-
-  //Copy data to frame (start at element 1 since toggle is at data 0)
   memcpy(&(writeDataFrame_.data[1]),dataBuffer_ + writtenBytes_,bytesToWrite);
   writeDataFrame_.can_dlc = bytesToWrite + 1; // need to include the toggle byte
-  // add toggle byte (start with toggle 0)
-  //if(useToggle) {
-  //  writeDataFrame_.data[0] = 0x70; // toggle 1
-  //} else {
-  //  writeDataFrame_.data[0] = 0x60; // toggle 0
-  //}
-
   writeBuffer_->addWriteCAN(&writeDataFrame_);  // Send first data frame
   writtenBytes_ += bytesToWrite;
   return bytesToWrite;
