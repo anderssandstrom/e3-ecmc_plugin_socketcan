@@ -20,6 +20,7 @@
 #include "inttypes.h"
 #include <string>
 #include "ecmcSocketCANWriteBuffer.h"
+#include "epicsMutex.h"
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
@@ -58,6 +59,8 @@ class ecmcCANOpenPDO {
   void printBuffer();
   int dbgMode_;
   can_frame writeFrame_;
+  epicsMutexId  dataMutex_;
+
 };
 
 #endif  /* ECMC_CANOPEN_PDO_H_ */

@@ -58,6 +58,8 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeFrame_.data[6] = 0;
   writeFrame_.data[7] = 0;
 
+  dataMutex_ = epicsMutexCreate();
+
 }
 
 ecmcCANOpenPDO::~ecmcCANOpenPDO() {
@@ -95,8 +97,10 @@ void ecmcCANOpenPDO::newRxFrame(can_frame *frame) {
   // Wait for:
   if(rw_ == DIR_READ) {
     if(validateFrame(frame)) {
+      epicsMutexLock(dataMutex_);
       memset(dataBuffer_,0,ODSize_);
       memcpy(dataBuffer_, &(frame->data[0]),frame->can_dlc);
+      epicsMutexUnlock(dataMutex_);
       errorCode_ = 0;
       if(dbgMode_) {
         printBuffer();
@@ -129,12 +133,16 @@ int ecmcCANOpenPDO::validateFrame(can_frame *frame) {
 }
 
 void ecmcCANOpenPDO::setValue(uint64_t data) {
+  epicsMutexLock(dataMutex_);
   memcpy(dataBuffer_, &data, ODSize_);
+  epicsMutexUnlock(dataMutex_);
 }
 
 int ecmcCANOpenPDO::writeValue() {
   if(writeFrame_.can_dlc > 0) {
+    epicsMutexLock(dataMutex_);
     memcpy(&(writeFrame_.data[0]), dataBuffer_ ,writeFrame_.can_dlc);
+    epicsMutexUnlock(dataMutex_);
   }
   return writeBuffer_->addWriteCAN(&writeFrame_);
 }
