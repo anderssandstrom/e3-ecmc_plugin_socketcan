@@ -1,0 +1,14 @@
+IOC_TEST:PLC-0-enable
+REQMOD:mcag-trgt-muts--15408:MODULES
+REQMOD:mcag-trgt-muts--15408:VERSIONS
+REQMOD:mcag-trgt-muts--15408:MOD_VER
+REQMOD:mcag-trgt-muts--15408:exit
+REQMOD:mcag-trgt-muts--15408:BaseVersion
+REQMOD:mcag-trgt-muts--15408:require_VER
+REQMOD:mcag-trgt-muts--15408:ecmccfg_VER
+REQMOD:mcag-trgt-muts--15408:asyn_VER
+REQMOD:mcag-trgt-muts--15408:exprtk_VER
+REQMOD:mcag-trgt-muts--15408:motor_VER
+REQMOD:mcag-trgt-muts--15408:ecmc_VER
+IOC_TEST:PLC-0-scantime
+IOC_TEST:PLC-0-error
