@@ -7,7 +7,6 @@
 *
 *  Created on: Mar 22, 2020
 *      Author: anderssandstrom
-*      Credits to  https://github.com/sgreg/dynamic-loading 
 *
 \*************************************************************************/
 
@@ -27,12 +26,14 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
                                int readTimeoutMs,
                                int writeCycleMs, 
                                int exeSampleTimeMs,
+                               const char* name,
                                int dbgMode) {
 
   writeBuffer_        = writeBuffer;
   cobId_              = cobId;
   ODSize_             = ODSize;
-  
+  name_               = strdup(name);
+
   if(ODSize_ > 8)  {
     ODSize_ = 8;
   }
@@ -48,8 +49,8 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
   dbgMode_            = dbgMode;
 
   writeFrame_.can_id  = cobId_;
-  writeFrame_.can_dlc = ODSize;     // data length
-  writeFrame_.data[0] = 0;  // request read cmd
+  writeFrame_.can_dlc = ODSize;  // data length
+  writeFrame_.data[0] = 0;       // request read cmd
   writeFrame_.data[1] = 0;
   writeFrame_.data[2] = 0;
   writeFrame_.data[3] = 0;
@@ -64,6 +65,7 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
 
 ecmcCANOpenPDO::~ecmcCANOpenPDO() {
   delete[] dataBuffer_;
+  free(name_);
 }
 
 void ecmcCANOpenPDO::execute() {

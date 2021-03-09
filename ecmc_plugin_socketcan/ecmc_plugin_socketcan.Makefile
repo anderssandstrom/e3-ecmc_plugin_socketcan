@@ -53,6 +53,8 @@ SOURCES += $(APPSRC)/ecmcSocketCANWrap.cpp
 SOURCES += $(APPSRC)/ecmcSocketCANWriteBuffer.cpp
 SOURCES += $(APPSRC)/ecmcCANOpenSDO.cpp
 SOURCES += $(APPSRC)/ecmcCANOpenPDO.cpp
+SOURCES += $(APPSRC)/ecmcCANOpenDevice.cpp
+SOURCES += $(APPSRC)/ecmcCANOpenMaster.cpp
 
 db:
 

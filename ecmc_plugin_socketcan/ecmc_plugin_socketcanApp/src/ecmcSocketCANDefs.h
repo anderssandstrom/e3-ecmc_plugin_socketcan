@@ -7,7 +7,6 @@
 *
 *  Created on: March 02, 2021
 *      Author: anderssandstrom
-*      Credits to  https://github.com/sgreg/dynamic-loading 
 *
 \*************************************************************************/
 

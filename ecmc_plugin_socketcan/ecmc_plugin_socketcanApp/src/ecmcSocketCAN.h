@@ -17,8 +17,8 @@
 #include "ecmcAsynPortDriver.h"
 #include "ecmcSocketCANDefs.h"
 #include "ecmcSocketCANWriteBuffer.h"
-#include "ecmcCANOpenSDO.h"
-#include "ecmcCANOpenPDO.h"
+#include "ecmcCANOpenDevice.h"
+#include "ecmcCANOpenMaster.h"
 #include "inttypes.h"
 #include <string>
 
@@ -42,7 +42,7 @@
 #define ECMC_CAN_ERROR_WRITE_INCOMPLETE 13
 #define ECMC_CAN_ERROR_WRITE_BUFFER_NULL 14
 
-class ecmcSocketCAN : public asynPortDriver {
+class ecmcSocketCAN {
  public:
 
   /** ecmc ecmcSocketCAN class
@@ -61,11 +61,11 @@ class ecmcSocketCAN : public asynPortDriver {
   void doWriteWorker();
   void doConnectWorker();
 
-  virtual asynStatus    writeInt32(asynUser *pasynUser, epicsInt32 value);
-  virtual asynStatus    readInt32(asynUser *pasynUser, epicsInt32 *value);
-  virtual asynStatus    readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
-                                      size_t nElements, size_t *nIn);
-  virtual asynStatus    readFloat64(asynUser *pasynUser, epicsFloat64 *value);
+  //virtual asynStatus    writeInt32(asynUser *pasynUser, epicsInt32 value);
+  //virtual asynStatus    readInt32(asynUser *pasynUser, epicsInt32 *value);
+  //virtual asynStatus    readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
+  //                                    size_t nElements, size_t *nIn);
+  //virtual asynStatus    readFloat64(asynUser *pasynUser, epicsFloat64 *value);
   void                  connectExternal();  
   int                   getConnected();
   int                   addWriteCAN(uint32_t canId,
@@ -105,12 +105,15 @@ class ecmcSocketCAN : public asynPortDriver {
   int                   exeSampleTimeMs_;
   
   ecmcSocketCANWriteBuffer *writeBuffer_;
-  ecmcCANOpenSDO *testSdo_;
-  ecmcCANOpenPDO *testPdo_;
-  ecmcCANOpenPDO *lssPdo_;
-  ecmcCANOpenPDO *syncPdo_;
-  ecmcCANOpenPDO *heartPdo_;
-  ecmcCANOpenSDO *basicConfSdo_;
+  //ecmcCANOpenSDO *testSdo_;
+  //ecmcCANOpenPDO *testPdo_;
+  //ecmcCANOpenPDO *lssPdo_;
+  //ecmcCANOpenPDO *syncPdo_;
+  //ecmcCANOpenPDO *heartPdo_;
+  //ecmcCANOpenSDO *basicConfSdo_;
+
+  ecmcCANOpenDevice *testDevice_;
+  ecmcCANOpenDevice *testMaster_;
   int cycleCounter_;
 };
 

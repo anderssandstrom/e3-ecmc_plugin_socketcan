@@ -37,8 +37,9 @@ class ecmcCANOpenSDO {
                  uint16_t ODIndex,    // Object dictionary index
                  uint8_t ODSubIndex, // Object dictionary subindex
                  uint32_t ODSize,
-                 int readSampleTimeMs, 
-                 int exeSampleTimeMs, 
+                 int readSampleTimeMs,
+                 int exeSampleTimeMs,
+                 const char *name,
                  int dbgMode);
   ~ecmcCANOpenSDO();
   void execute();
@@ -85,6 +86,7 @@ class ecmcCANOpenSDO {
   ecmc_write_states writeStates_;
   void printBuffer();
   uint32_t writtenBytes_;
+  char *name_;
 };
 
 #endif  /* ECMC_CANOPEN_SDO_H_ */

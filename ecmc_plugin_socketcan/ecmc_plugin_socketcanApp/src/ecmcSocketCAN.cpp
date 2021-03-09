@@ -54,21 +54,7 @@ void f_worker_connect(void *obj) {
 */
 ecmcSocketCAN::ecmcSocketCAN(char* configStr,
                              char* portName,
-                             int exeSampleTimeMs) 
-                             : asynPortDriver(portName,
-                              1, /* maxAddr */
-                              asynInt32Mask | asynFloat64Mask | asynFloat32ArrayMask |
-                              asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask |
-                              asynOctetMask | asynInt8ArrayMask | asynInt16ArrayMask |
-                              asynInt32ArrayMask | asynUInt32DigitalMask, /* Interface mask */
-                              asynInt32Mask | asynFloat64Mask | asynFloat32ArrayMask |
-                              asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask |
-                              asynOctetMask | asynInt8ArrayMask | asynInt16ArrayMask |
-                              asynInt32ArrayMask | asynUInt32DigitalMask, /* Interrupt mask */
-                              ASYN_CANBLOCK , /*NOT ASYN_MULTI_DEVICE*/
-                              1, /* Autoconnect */
-                              0, /* Default priority */
-                              0) /* Default stack size */ {
+                             int exeSampleTimeMs) {
   // Init
   cfgCanIFStr_ = NULL;
   cfgDbgMode_  = 0;
@@ -77,12 +63,14 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   socketId_    = -1;
   connected_   = 0;
   writeBuffer_ = NULL;
-  testSdo_     = NULL;
-  testPdo_     = NULL;
-  lssPdo_      = NULL;
-  syncPdo_     = NULL;
-  heartPdo_    = NULL;
-  basicConfSdo_ = NULL;
+  //testSdo_     = NULL;
+  //testPdo_     = NULL;
+  //lssPdo_      = NULL;
+  //syncPdo_     = NULL;
+  //heartPdo_    = NULL;
+  //basicConfSdo_ = NULL;
+  testDevice_   = NULL;
+  testMaster_   = NULL;
   cycleCounter_ = 0;
 
   exeSampleTimeMs_ = exeSampleTimeMs;
@@ -113,26 +101,47 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
     connectPrivate();
   }
   writeBuffer_ = new ecmcSocketCANWriteBuffer(socketId_, cfgDbgMode_);
-  testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,7000,exeSampleTimeMs_, cfgDbgMode_);
-  testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,0,exeSampleTimeMs_, cfgDbgMode_);
+  testDevice_ = new ecmcCANOpenDevice(writeBuffer_,3,exeSampleTimeMs_,"pmu905",cfgDbgMode_);
+
+  //testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,7000,exeSampleTimeMs_, cfgDbgMode_);
+  testDevice_->addSDO(0x583,    // 0x580 + CobId
+                      0x603,    // 0x600 + Cobid
+                      DIR_READ,
+                      0x2640,    // Object dictionary index
+                      0x0, // Object dictionary subindex
+                      56,
+                      7000,
+                      "analogValues");
+
+  //testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,0,exeSampleTimeMs_, cfgDbgMode_);
+  testDevice_->addPDO(0x183,
+                      DIR_READ,                      
+                      8,
+                      10000,
+                      0,
+                      "status");  
+
+
+
+  testMaster_= new ecmcCANOpenMaster(writeBuffer_,1,exeSampleTimeMs_,"linuxMaster",cfgDbgMode_);
 
 
   // Test LSS heartbeat "master" signal. This makes the led on pmu905 to go to "Normal Communication"
   // can0  0x7E5   [0]
-  lssPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x7E5,DIR_WRITE,0,0,1000,exeSampleTimeMs_, cfgDbgMode_);
+  //lssPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x7E5,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"lss", cfgDbgMode_);
 
   
   // Test sync signal
   // can0  0x80   [0]
-  syncPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x80,DIR_WRITE,0,0,1000,exeSampleTimeMs_, cfgDbgMode_);
+  //syncPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x80,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"sync", cfgDbgMode_);
 
   // Test heartbeat signal
   // can0  0x701   [1]  05
   //can_add_write(1793,1,5,0,0,0,0,0,0,0);
-  heartPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x701,DIR_WRITE,1,0,1000,exeSampleTimeMs_, cfgDbgMode_);
-  heartPdo_->setValue(5);
+  //heartPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x701,DIR_WRITE,1,0,1000,exeSampleTimeMs_,"heartbeat",cfgDbgMode_);
+  //heartPdo_->setValue(5);
 
-  basicConfSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_WRITE,0x2690,1,7,0,exeSampleTimeMs_, cfgDbgMode_);
+  //basicConfSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_WRITE,0x2690,1,7,0,exeSampleTimeMs_,"basicConfiguration" ,cfgDbgMode_);
   //byte0 = 0
   //byte1 = 0
   //byte2 = 0
@@ -141,9 +150,9 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   //byte 6 =0
   //byte 7 =0
   // => 0x1388000
-  uint64_t tempVal = 0x1388000;
-  uint8_t * val = (uint8_t*)&tempVal;
-  basicConfSdo_->setValue(val,7);
+  //uint64_t tempVal = 0x1388000;
+  //uint8_t * val = (uint8_t*)&tempVal;
+  //basicConfSdo_->setValue(val,7);
   initAsyn();
 }
 
@@ -241,27 +250,34 @@ void ecmcSocketCAN::doReadWorker() {
     // Wait for new CAN frame 
 
     // TODO MUST CHECK RETRUN VALUE OF READ!!!!!  
-    read(socketId_, &rxmsg_, sizeof(rxmsg_));
-    if(testSdo_) {
-      testSdo_->newRxFrame(&rxmsg_);
-    }
-    if(testPdo_) {
-      testPdo_->newRxFrame(&rxmsg_);
-    }
-    if(lssPdo_) {
-      lssPdo_->newRxFrame(&rxmsg_);
-    }
-    if(syncPdo_) {
-      syncPdo_->newRxFrame(&rxmsg_);
+     read(socketId_, &rxmsg_, sizeof(rxmsg_));
+//    if(testSdo_) {
+//      testSdo_->newRxFrame(&rxmsg_);
+//    }
+//    if(testPdo_) {
+//      testPdo_->newRxFrame(&rxmsg_);
+//    }
+//    if(lssPdo_) {
+//      lssPdo_->newRxFrame(&rxmsg_);
+//    }
+//    if(syncPdo_) {
+//      syncPdo_->newRxFrame(&rxmsg_);
+//    }    
+//
+//    if(heartPdo_) {
+//      heartPdo_->newRxFrame(&rxmsg_);
+//    }    
+
+    if(testDevice_) {
+      testDevice_->newRxFrame(&rxmsg_);
+    }    
+    if(testMaster_) {
+      testMaster_->newRxFrame(&rxmsg_);
     }    
 
-    if(heartPdo_) {
-      heartPdo_->newRxFrame(&rxmsg_);
-    }    
-
-    if(basicConfSdo_) {
-      basicConfSdo_->newRxFrame(&rxmsg_);
-    }
+    //if(basicConfSdo_) {
+    //  basicConfSdo_->newRxFrame(&rxmsg_);
+    //}
  
     if(cfgDbgMode_) {
       // Simulate candump printout
@@ -328,36 +344,43 @@ int ecmcSocketCAN::addWriteCAN(uint32_t canId,
   
 void  ecmcSocketCAN::execute() {
 
-  if(testSdo_) {
-    testSdo_->execute();
+  // if(testSdo_) {
+  //   testSdo_->execute();
+  // }
+
+  // if(testPdo_) {
+  //   testPdo_->execute();
+  // }
+
+  // if(lssPdo_) {
+  //   lssPdo_->execute();
+  // }
+
+  // if(syncPdo_) {
+  //   syncPdo_->execute();
+  // }
+
+  // if(heartPdo_) {
+  //   heartPdo_->execute();
+  // }
+
+  if(testMaster_) {
+    testMaster_->execute();
+  }
+  if(testDevice_) {
+    testDevice_->execute();
   }
 
-  if(testPdo_) {
-    testPdo_->execute();
-  }
-
-  if(lssPdo_) {
-    lssPdo_->execute();
-  }
-
-  if(syncPdo_) {
-    syncPdo_->execute();
-  }
-
-  if(heartPdo_) {
-    heartPdo_->execute();
-  }
-
-  cycleCounter_++;
-  if(basicConfSdo_) {
-    basicConfSdo_->execute();
-    if(cycleCounter_ > 10000) {
-      cycleCounter_ = 0;
-      printf("################################### TEST WRITE SDO#############\n");
-      basicConfSdo_->writeValue();
-    }
+  // cycleCounter_++;
+  // if(basicConfSdo_) {
+  //   basicConfSdo_->execute();
+  //   if(cycleCounter_ > 10000) {
+  //     cycleCounter_ = 0;
+  //     printf("################################### TEST WRITE SDO#############\n");
+  //     basicConfSdo_->writeValue();
+  //   }
     
-  }
+  // }
 
 
   return;
@@ -486,107 +509,108 @@ std::string ecmcSocketCAN::to_string(int value) {
   return os.str();
 }
 
-asynStatus ecmcSocketCAN::writeInt32(asynUser *pasynUser, epicsInt32 value) {
-  int function = pasynUser->reason;
-  /*if( function == asynEnableId_ ) {
-    cfgEnable_ = value;
-    return asynSuccess;
-  } else if( function == asynFFTModeId_){
-    cfgMode_ = (FFT_MODE)value;// Called from low prio worker thread. Makes the hard work
-void ecmcSocketCAN::doCalcWorker() {
-
-  while(true) {
-    doCalcEvent_.wait();
-    if(destructs_) {
-      break;
-    }
-    // Pre-process    
-    removeDCOffset();  // Remove dc on rawdata
-    removeLin();       // Remove fitted line
-    // Process
-    calcFFT();         // FFT cacluation
-    // Post-process    
-    scaleFFT();        // Scale FFT
-    calcFFTAmp();      // Calculate amplitude from complex
-    calcFFTXAxis();    // Calculate x axis
-
-    doCallbacksFloat64Array(rawDataBuffer_,     cfgNfft_,     asynRawDataId_, 0);
-    doCallbacksFloat64Array(prepProcDataBuffer_, cfgNfft_,    asynPPDataId_,  0);
-    doCallbacksFloat64Array(fftBufferResultAmp_,cfgNfft_/2+1, asynFFTAmpId_,  0);
-    doCallbacksFloat64Array(fftBufferXAxis_,    cfgNfft_/2+1, asynFFTXAxisId_,0);
-    callParamCallbacks();    
-    if(cfgDbgMode_){
-      printComplexArray(fftBufferResult_,
-                        cfgNfft_,
-                        objectId_);
-      printEcDataArray((uint8_t*)rawDataBuffer_,
-                       cfgNfft_*sizeof(double),
-                       ECMC_EC_F64,
-                       objectId_);    
-    }
-    
-    clearBuffers();
-    triggOnce_ = 0;    // Wait for next trigger if in trigg mode
-    setIntegerParam(asynTriggId_,triggOnce_);
-    fftWaitingForCalc_ = 0;
-  } 
-}
-    return asynSuccess;
-  }
-  return asynError;*/
-  return asynSuccess;
-}
-
-asynStatus ecmcSocketCAN::readInt32(asynUser *pasynUser, epicsInt32 *value) {
-  int function = pasynUser->reason;
-  /*if( function == asynEnableId_ ) {
-    *value = cfgEnable_;
-    return asynSuccess;
-  } else if( function == asynFFTModeId_ ){
-    *value = cfgMode_;
-    return asynSuccess;
-  } else if( function == asynTriggId_ ){
-    *value = triggOnce_;
-    return asynSuccess;
-  }else if( function == asynFFTStatId_ ){
-    *value = (epicsInt32)status_;
-    return asynSuccess;
-  }else if( function == asynNfftId_ ){
-    *value = (epicsInt32)cfgNfft_;
-    return asynSuccess;
-  }else if( function == asynElementsInBuffer_){
-    *value = (epicsInt32)elementsInBuffer_;
-    return asynSuccess;
-  }
-  return asynError;*/
-  return asynSuccess;
-}
-
-asynStatus ecmcSocketCAN::readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
-                                   size_t nElements, size_t *nIn) {
-  int function = pasynUser->reason;
-  /*if( function == asynSourceId_ ) {
-    unsigned int ncopy = strlen(cfgCanIFStr_);
-    if(nElements < ncopy) {
-      ncopy = nElements;
-    } 
-    memcpy (value, cfgCanIFStr_, ncopy);
-    *nIn = ncopy;
-    return asynSuccess;
-  }
-
-  *nIn = 0;
-  return asynError;*/
-  return asynSuccess;
-}
-
-asynStatus  ecmcSocketCAN::readFloat64(asynUser *pasynUser, epicsFloat64 *value) {
-  int function = pasynUser->reason;
-  /*if( function == asynSRateId_ ) {
-    *value = cfgDataSampleRateHz_;
-    return asynSuccess;
-  }
-
-  return asynError;*/
-  return asynSuccess;
-}
+//asynStatus ecmcSocketCAN::writeInt32(asynUser *pasynUser, epicsInt32 value) {
+//  int function = pasynUser->reason;
+//  /*if( function == asynEnableId_ ) {
+//    cfgEnable_ = value;
+//    return asynSuccess;
+//  } else if( function == asynFFTModeId_){
+//    cfgMode_ = (FFT_MODE)value;// Called from low prio worker thread. Makes the hard work
+//void ecmcSocketCAN::doCalcWorker() {
+//
+//  while(true) {
+//    doCalcEvent_.wait();
+//    if(destructs_) {
+//      break;
+//    }
+//    // Pre-process    
+//    removeDCOffset();  // Remove dc on rawdata
+//    removeLin();       // Remove fitted line
+//    // Process
+//    calcFFT();         // FFT cacluation
+//    // Post-process    
+//    scaleFFT();        // Scale FFT
+//    calcFFTAmp();      // Calculate amplitude from complex
+//    calcFFTXAxis();    // Calculate x axis
+//
+//    doCallbacksFloat64Array(rawDataBuffer_,     cfgNfft_,     asynRawDataId_, 0);
+//    doCallbacksFloat64Array(prepProcDataBuffer_, cfgNfft_,    asynPPDataId_,  0);
+//    doCallbacksFloat64Array(fftBufferResultAmp_,cfgNfft_/2+1, asynFFTAmpId_,  0);
+//    doCallbacksFloat64Array(fftBufferXAxis_,    cfgNfft_/2+1, asynFFTXAxisId_,0);
+//    callParamCallbacks();    
+//    if(cfgDbgMode_){
+//      printComplexArray(fftBufferResult_,
+//                        cfgNfft_,
+//                        objectId_);
+//      printEcDataArray((uint8_t*)rawDataBuffer_,
+//                       cfgNfft_*sizeof(double),
+//                       ECMC_EC_F64,
+//                       objectId_);    
+//    }
+//    
+//    clearBuffers();
+//    triggOnce_ = 0;    // Wait for next trigger if in trigg mode
+//    setIntegerParam(asynTriggId_,triggOnce_);
+//    fftWaitingForCalc_ = 0;
+//  } 
+//}
+//    return asynSuccess;
+//  }
+//  return asynError;*/
+//  return asynSuccess;
+//}
+//
+//asynStatus ecmcSocketCAN::readInt32(asynUser *pasynUser, epicsInt32 *value) {
+//  int function = pasynUser->reason;
+//  /*if( function == asynEnableId_ ) {
+//    *value = cfgEnable_;
+//    return asynSuccess;
+//  } else if( function == asynFFTModeId_ ){
+//    *value = cfgMode_;
+//    return asynSuccess;
+//  } else if( function == asynTriggId_ ){
+//    *value = triggOnce_;
+//    return asynSuccess;
+//  }else if( function == asynFFTStatId_ ){
+//    *value = (epicsInt32)status_;
+//    return asynSuccess;
+//  }else if( function == asynNfftId_ ){
+//    *value = (epicsInt32)cfgNfft_;
+//    return asynSuccess;
+//  }else if( function == asynElementsInBuffer_){
+//    *value = (epicsInt32)elementsInBuffer_;
+//    return asynSuccess;
+//  }
+//  return asynError;*/
+//  return asynSuccess;
+//}
+//
+//asynStatus ecmcSocketCAN::readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
+//                                   size_t nElements, size_t *nIn) {
+//  int function = pasynUser->reason;
+//  /*if( function == asynSourceId_ ) {
+//    unsigned int ncopy = strlen(cfgCanIFStr_);
+//    if(nElements < ncopy) {
+//      ncopy = nElements;
+//    } 
+//    memcpy (value, cfgCanIFStr_, ncopy);
+//    *nIn = ncopy;
+//    return asynSuccess;
+//  }
+//
+//  *nIn = 0;
+//  return asynError;*/
+//  return asynSuccess;
+//}
+//
+//asynStatus  ecmcSocketCAN::readFloat64(asynUser *pasynUser, epicsFloat64 *value) {
+//  int function = pasynUser->reason;
+//  /*if( function == asynSRateId_ ) {
+//    *value = cfgDataSampleRateHz_;
+//    return asynSuccess;
+//  }
+//
+//  return asynError;*/
+//  return asynSuccess;
+//}
+//

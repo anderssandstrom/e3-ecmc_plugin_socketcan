@@ -5,9 +5,8 @@
 *
 *  ecmcCANOpenDevice.cpp
 *
-*  Created on: Mar 22, 2020
+*  Created on: Mar 08, 2021
 *      Author: anderssandstrom
-*      Credits to  https://github.com/sgreg/dynamic-loading 
 *
 \*************************************************************************/
 
@@ -23,6 +22,7 @@
 ecmcCANOpenDevice::ecmcCANOpenDevice(ecmcSocketCANWriteBuffer* writeBuffer,
                                      uint32_t nodeId,  // 0x580 + CobId
                                      int exeSampleTimeMs,
+                                     const char* name,
                                      int dbgMode) {
 
   writeBuffer_        = writeBuffer;
@@ -31,19 +31,28 @@ ecmcCANOpenDevice::ecmcCANOpenDevice(ecmcSocketCANWriteBuffer* writeBuffer,
   exeCounter_         = 0;
   errorCode_          = 0;
   dbgMode_            = dbgMode;
+  name_               = strdup(name);
 
   pdoCounter_ = 0;
   sdoCounter_ = 0;
 
   for(int i = 0 ; i<ECMC_CAN_DEVICE_PDO_MAX_COUNT;i++) {
-    pdos[i] = NULL;
+    pdos_[i] = NULL;
   }
   for(int i = 0 ; i<ECMC_CAN_DEVICE_SDO_MAX_COUNT;i++) {
-    sdos[i] = NULL;
+    sdos_[i] = NULL;
   }
 }
 
 ecmcCANOpenDevice::~ecmcCANOpenDevice() {
+  for(int i = 0 ; i<ECMC_CAN_DEVICE_PDO_MAX_COUNT;i++) {
+    delete pdos_[i];
+  }
+  for(int i = 0 ; i<ECMC_CAN_DEVICE_SDO_MAX_COUNT;i++) {
+    delete sdos_[i];
+  }
+
+  free(name_);
 }
 
 void ecmcCANOpenDevice::execute() {
@@ -51,14 +60,14 @@ void ecmcCANOpenDevice::execute() {
   exeCounter_++;
 
   for(int i=0 ; i<pdoCounter_; i++) {
-    if(pdos[i]) {
-      pdos[i]->execute();
+    if(pdos_[i]) {
+      pdos_[i]->execute();
     }
   }
 
   for(int i=0 ; i<sdoCounter_; i++) {
-    if(sdos[i]) {
-      sdos[i]->execute();
+    if(sdos_[i]) {
+      sdos_[i]->execute();
     }
   }
 
@@ -68,53 +77,58 @@ void ecmcCANOpenDevice::execute() {
 // new rx frame recived!
 void ecmcCANOpenDevice::newRxFrame(can_frame *frame) {
 
-  if (!validateFrame(frame) {
+  if (!validateFrame(frame)) {
     return;
   }
 
   // forward to pdos
   for(int i=0 ; i<pdoCounter_; i++) {
-    if(pdos[i]) {
-      pdos[i]->newRxFrame(frame);
+    if(pdos_[i]) {
+      pdos_[i]->newRxFrame(frame);
     }
   }
 
   // forward to sdos
   for(int i=0 ; i<sdoCounter_; i++) {
-    if(sdos[i]) {
-      sdos[i]->newRxFrame(frame);
+    if(sdos_[i]) {
+      sdos_[i]->newRxFrame(frame);
     }
   }
 
-  return
+  return;
 }
 
 // r 0x183 [8] 0x00 0x00 0x00 0x00 0x0B 0x40 0x04 0x20
 int ecmcCANOpenDevice::validateFrame(can_frame *frame) {
-  if(frame->can_id != cobId_) {
+  
+  // nodeid is always lower 7bits.. Need to check this calc.. byte order?!
+  uint8_t tempNodeId = frame->can_id & 0x7F;
+  
+  if(tempNodeId != nodeId_) {
     return 0;
   }
   return 1;
 }
 
-int ecmcCANOpenDevice::addPDO(ecmc_can_direction rw,
-                              int cobId,
+int ecmcCANOpenDevice::addPDO(uint32_t cobId,
+                              ecmc_can_direction rw,
                               uint32_t ODSize,
                               int readTimeoutMs,
                               int writeCycleMs,   //if <0 then write on demand..                              
-                              ) {
+                              const char* name) {
 
   if(pdoCounter_>= ECMC_CAN_DEVICE_PDO_MAX_COUNT) {
     return ECMC_CAN_PDO_INDEX_OUT_OF_RANGE;
   }
 
-  pdos[pdoCounter_] = new ecmcCANOpenPDO(writeBuffer_,
+  pdos_[pdoCounter_] = new ecmcCANOpenPDO(writeBuffer_,
                                          cobId,
                                          rw,
                                          ODSize,
                                          readTimeoutMs,
                                          writeCycleMs,
                                          exeSampleTimeMs_,
+                                         name,
                                          dbgMode_);
   pdoCounter_++;                                       
   return 0;
@@ -126,13 +140,14 @@ int ecmcCANOpenDevice::addSDO(uint32_t cobIdTx,    // 0x580 + CobId
                               uint16_t ODIndex,    // Object dictionary index
                               uint8_t ODSubIndex, // Object dictionary subindex
                               uint32_t ODSize,
-                              int readSampleTimeMs) {
+                              int readSampleTimeMs,
+                              const char* name) {
 
   if(sdoCounter_>= ECMC_CAN_DEVICE_SDO_MAX_COUNT) {
     return ECMC_CAN_SDO_INDEX_OUT_OF_RANGE;
   }
 
-  sdos[sdoCounter_] = new ecmcCANOpenSDO(writeBuffer_,
+  sdos_[sdoCounter_] = new ecmcCANOpenSDO(writeBuffer_,
                                          cobIdTx,
                                          cobIdRx,
                                          rw,
@@ -141,6 +156,7 @@ int ecmcCANOpenDevice::addSDO(uint32_t cobIdTx,    // 0x580 + CobId
                                          ODSize,
                                          readSampleTimeMs,
                                          exeSampleTimeMs_,
+                                         name,
                                          dbgMode_);
   sdoCounter_++;                                       
   return 0;

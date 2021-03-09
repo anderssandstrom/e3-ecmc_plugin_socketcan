@@ -7,7 +7,6 @@
 *
 *  Created on: Mar 22, 2020
 *      Author: anderssandstrom
-*      Credits to  https://github.com/sgreg/dynamic-loading 
 *
 \*************************************************************************/
 
@@ -31,6 +30,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
                                uint32_t ODSize,
                                int readSampleTimeMs, 
                                int exeSampleTimeMs,
+                               const char *name,
                                int dbgMode) {
 
   writeBuffer_        = writeBuffer;
@@ -40,6 +40,8 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   ODSubIndex_         = ODSubIndex;
   ODSize_             = ODSize;
   dbgMode_            = dbgMode;
+  name_               = strdup(name);
+
   // convert to ODIndex_ to indiviual bytes struct
   memcpy(&ODIndexBytes_, &ODIndex, 2);
   memcpy(&ODLengthBytes_, &ODSize_, 4);
@@ -170,6 +172,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
 
 ecmcCANOpenSDO::~ecmcCANOpenSDO() {
   delete[] dataBuffer_;
+  free(name_);
 }
 
 void ecmcCANOpenSDO::execute() {

@@ -36,6 +36,7 @@ class ecmcCANOpenPDO {
                  int readTimeoutMs,
                  int writeCycleMs,   //if <0 the write on demand..
                  int exeSampleTimeMs,
+                 const char *name, 
                  int dbgMode);
   ~ecmcCANOpenPDO();
   void execute();
@@ -60,6 +61,7 @@ class ecmcCANOpenPDO {
   int dbgMode_;
   can_frame writeFrame_;
   epicsMutexId  dataMutex_;
+  char* name_;
 
 };
 

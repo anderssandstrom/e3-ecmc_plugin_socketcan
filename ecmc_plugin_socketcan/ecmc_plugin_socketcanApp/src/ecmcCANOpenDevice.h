@@ -18,7 +18,6 @@
 #include "ecmcSocketCANDefs.h"
 #include "ecmcCANOpenPDO.h"
 #include "ecmcCANOpenSDO.h"
-#include "ecmcCANOpenDevice.h"
 #include "inttypes.h"
 #include <string>
 #include "ecmcSocketCANWriteBuffer.h"
@@ -37,27 +36,29 @@
 class ecmcCANOpenDevice {
  public:
   ecmcCANOpenDevice(ecmcSocketCANWriteBuffer* writeBuffer,
-                    uint32_t cobId,
+                    uint32_t nodeId,
                     int exeSampleTimeMs,
+                    const char* name,
                     int dbgMode);
-  ~ecmcCANOpenDevice();
+  virtual ~ecmcCANOpenDevice();
   void execute();
   void newRxFrame(can_frame *frame);
-  int addPDO(ecmc_can_direction rw,
-             uint32_t cobId,
+  int addPDO(uint32_t cobId,
+             ecmc_can_direction rw,
              uint32_t ODSize,
              int readTimeoutMs,
-             int writeCycleMs);   //if <0 then write on demand.
-  
+             int writeCycleMs,    //if <0 then write on demand.
+             const char* name);
+
   int addSDO(uint32_t cobIdTx,    // 0x580 + CobId
              uint32_t cobIdRx,    // 0x600 + Cobid
              ecmc_can_direction rw,
              uint16_t ODIndex,    // Object dictionary index
-             uint8_t ODSubIndex, // Object dictionary subindex
+             uint8_t ODSubIndex,  // Object dictionary subindex
              uint32_t ODSize,
-             int readSampleTimeMs);
-  
- private:
+             int readSampleTimeMs,
+             const char* name);
+ protected:
   int validateFrame(can_frame *frame);
   ecmcSocketCANWriteBuffer *writeBuffer_;
   uint32_t nodeId_;   // with cobid
@@ -67,8 +68,9 @@ class ecmcCANOpenDevice {
   int dbgMode_;
   int pdoCounter_;
   int sdoCounter_;
-  ecmcCANOpenSDO *pdos_[ECMC_CAN_DEVICE_PDO_MAX_COUNT];
-  ecmcCANOpenPDO *sdos_[ECMC_CAN_DEVICE_SDO_MAX_COUNT];
+  char* name_;
+  ecmcCANOpenPDO *pdos_[ECMC_CAN_DEVICE_PDO_MAX_COUNT];
+  ecmcCANOpenSDO *sdos_[ECMC_CAN_DEVICE_SDO_MAX_COUNT];
 };
 
 #endif  /* ECMC_CANOPEN_DEVICE_H_ */
