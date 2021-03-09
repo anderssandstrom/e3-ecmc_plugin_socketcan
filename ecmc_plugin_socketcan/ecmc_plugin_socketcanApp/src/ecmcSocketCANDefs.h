@@ -18,6 +18,9 @@
 #define ECMC_PLUGIN_IF_OPTION_CMD          "IF="
 #define ECMC_PLUGIN_CONNECT_OPTION_CMD     "CONNECT="
 
+#define ECMC_SDO_REPLY_TIMOUT_MS           200
+
+
 enum ecmc_can_direction {
     DIR_WRITE = 1,
     DIR_READ  = 2 };

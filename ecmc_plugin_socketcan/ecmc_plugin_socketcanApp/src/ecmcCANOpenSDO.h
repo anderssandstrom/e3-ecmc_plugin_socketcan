@@ -26,6 +26,7 @@
 
 #define ECMC_CAN_ERROR_SDO_WRITE_BUSY 110
 
+#define ECMC_CAN_ERROR_SDO_TIMEOUT 111
 
 
 class ecmcCANOpenSDO {
@@ -40,7 +41,7 @@ class ecmcCANOpenSDO {
                  int readSampleTimeMs,
                  int exeSampleTimeMs,
                  const char *name,
-                 int dbgMode);
+                 int dbgMode);                
   ~ecmcCANOpenSDO();
   void execute();
   void newRxFrame(can_frame *frame);
@@ -78,8 +79,9 @@ class ecmcCANOpenSDO {
   can_frame writeConfReqFrameTg1_;
   
   int dbgMode_;
-  int busy_;
+  int errorCode_;
   uint8_t *dataBuffer_;
+  uint8_t *tempReadBuffer_;
   uint32_t recivedBytes_;
   int useTg1Frame_;
   ecmc_read_states readStates_;
@@ -87,6 +89,10 @@ class ecmcCANOpenSDO {
   void printBuffer();
   uint32_t writtenBytes_;
   char *name_;
+  epicsMutexId  dataMutex_;
+  int busyCounter_;
+  //std::atomic_flag *ptrSdo1Busy_;
+  std::atomic_flag busy_;
 };
 
 #endif  /* ECMC_CANOPEN_SDO_H_ */

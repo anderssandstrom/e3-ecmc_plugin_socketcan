@@ -35,7 +35,8 @@ ecmcCANOpenDevice::ecmcCANOpenDevice(ecmcSocketCANWriteBuffer* writeBuffer,
   isMaster_           = false;
   pdoCounter_ = 0;
   sdoCounter_ = 0;
-
+  sdo1Busy_.test_and_set();   // make sure only one sdo is accessing the bus at the same time
+  sdo1Busy_.clear();
   for(int i = 0 ; i<ECMC_CAN_DEVICE_PDO_MAX_COUNT;i++) {
     pdos_[i] = NULL;
   }

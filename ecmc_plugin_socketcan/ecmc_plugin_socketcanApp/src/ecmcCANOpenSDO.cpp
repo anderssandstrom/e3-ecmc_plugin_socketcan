@@ -41,6 +41,8 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   ODSize_             = ODSize;
   dbgMode_            = dbgMode;
   name_               = strdup(name);
+  errorCode_          = 0;
+  dataMutex_ = epicsMutexCreate();
 
   // convert to ODIndex_ to indiviual bytes struct
   memcpy(&ODIndexBytes_, &ODIndex, 2);
@@ -50,14 +52,14 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   exeSampleTimeMs_    = exeSampleTimeMs;
   rw_                 = rw;
   exeCounter_         = 0;
-  busy_               = 0;
   recivedBytes_       = 0;
   writtenBytes_       = 0; 
   readStates_         = READ_IDLE;
   writeStates_        = WRITE_IDLE;
   useTg1Frame_        = 1;
   dataBuffer_         = new uint8_t(ODSize_);
-
+  tempReadBuffer_     = new uint8_t(ODSize_);
+  busyCounter_        = 0;
   // Request data (send on slave RX)
   // w 0x603 [8] 0x40 0x40 0x26 0x00 0x00 0x00 0x00 0x00
   readReqTransferFrame_.can_id  = cobIdRx;
@@ -167,22 +169,48 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeConfReqFrameTg1_.data[4] = 0;
   writeConfReqFrameTg1_.data[5] = 0;
   writeConfReqFrameTg1_.data[6] = 0;
-  writeConfReqFrameTg1_.data[7] = 0;  
+  writeConfReqFrameTg1_.data[7] = 0;
+  busy_.clear();
 }
 
 ecmcCANOpenSDO::~ecmcCANOpenSDO() {
   delete[] dataBuffer_;
+  delete[] tempReadBuffer_;
   free(name_);
 }
 
 void ecmcCANOpenSDO::execute() {
+  
+  
+  if(busy_.test_and_set()) {
+   busyCounter_++;
+  } else {
+    busy_.clear();
+    busyCounter_ = 0;
+  }
+  
+  if(busyCounter_>ECMC_SDO_REPLY_TIMOUT_MS) {
+    // cancel read or write
+    printf("SDO BUSY timeout!!\n");
+    memset(tempReadBuffer_,0,ODSize_);
+    readStates_ = READ_IDLE;
+    writeStates_ = WRITE_IDLE;
+    exeCounter_  = 0;
+    busyCounter_ = 0;
+    errorCode_ = ECMC_CAN_ERROR_SDO_TIMEOUT;
+    busy_.clear();
+  }
 
-  exeCounter_++;
-  if(exeCounter_* exeSampleTimeMs_ >= readSampleTimeMs_ && ! busy_) {
-    exeCounter_ =0;
+  if(exeCounter_* exeSampleTimeMs_ < readSampleTimeMs_ && rw_ == DIR_READ) { // do not risk overflow
+    exeCounter_++;
+  } else { // Counter is higher, try to write
     if(rw_ == DIR_READ) {      
-      busy_ = 1;
-     
+      if(busy_.test_and_set()) {
+        // wait for busy to go down
+        return;
+      }      
+      
+      exeCounter_ =0; 
       readStates_ = READ_REQ_TRANSFER;
       if(dbgMode_) {
         printf("STATE = READ_REQ_TRANSFER\n");
@@ -205,7 +233,8 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
   // Wait for:
   // # r 0x583 [8] 0x41 0x40 0x26 0x00 0x38 0x00 0x00 0x00
   int errorCode = 0;
-  if(!busy_) {
+  if(!busy_.test_and_set()) {
+    busy_.clear();
     // Not waiting for any data..
     return;
   }
@@ -246,7 +275,7 @@ int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
       }
       
       if(bytesToRead + recivedBytes_ <= ODSize_) {
-        memcpy(dataBuffer_ + recivedBytes_, &(frame->data[1]),bytesToRead);
+        memcpy(tempReadBuffer_ + recivedBytes_, &(frame->data[1]),bytesToRead);
         recivedBytes_ += bytesToRead;
       }
       if(recivedBytes_ < ODSize_) {  // Ask for more data but must toggle so alternat the prepared frames
@@ -263,14 +292,20 @@ int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
       }
       
       if (recivedBytes_ >= ODSize_) {
-        readStates_ =READ_IDLE;
-        busy_ = 0;
+        readStates_ =READ_IDLE;        
         useTg1Frame_ = 0;
+        
+        epicsMutexLock(dataMutex_);
+        memcpy(dataBuffer_,tempReadBuffer_,ODSize_);
+        epicsMutexUnlock(dataMutex_);
         if(dbgMode_) {
           printf("STATE = READ_IDLE\n");
           printf("All data read from slave SDO.\n");
-          printBuffer();            
+          //copy complete data to dataBuffer_
+          printBuffer();
         }
+
+        busy_.clear();        
         return 0;
       }
       break;
@@ -312,13 +347,13 @@ int ecmcCANOpenSDO::writeDataStateMachine(can_frame *frame) {
       // Check if write was done already or if more frames are needed!
       if(writtenBytes_ >= ODSize_) {
         writeStates_ = WRITE_IDLE;
-        useTg1Frame_ = 0;
-        busy_ = 0;
+        useTg1Frame_ = 0;        
         if(dbgMode_) {
           printf("STATE = WRITE_IDLE\n");
           printf("All data written to slave SDO.\n");
           printBuffer();          
         }
+        busy_.clear();
         return 0;
       }
 
@@ -415,17 +450,22 @@ void ecmcCANOpenSDO::setValue(uint8_t *data, size_t bytes) {
   if(bytesToCopy == 0) {
     return;
   }
+  epicsMutexLock(dataMutex_);
   memcpy(dataBuffer_, &data, ODSize_);
+  epicsMutexUnlock(dataMutex_);
 }
 
 int ecmcCANOpenSDO::writeValue() {
   // Busy right now!
   printf("WRITEVALUE!!\n");
-  if(busy_ || writeStates_ != WRITE_IDLE ) {
+  if(busy_.test_and_set()) {
     return ECMC_CAN_ERROR_SDO_WRITE_BUSY;
   }
-  busy_ = 1;
-
+  
+  if(writeStates_ != WRITE_IDLE ) {
+    return ECMC_CAN_ERROR_SDO_WRITE_BUSY;
+  }
+  
   writeStates_ = WRITE_REQ_TRANSFER;
   if(dbgMode_) {
     printf("STATE = WRITE_REQ_TRANSFER\n");

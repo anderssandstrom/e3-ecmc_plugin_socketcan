@@ -42,6 +42,7 @@ APPDB:=$(APP)/Db
 APPSRC:=$(APP)/src
 
 USR_CFLAGS   += -shared -fPIC -Wall -Wextra
+USR_CPPFLAGS += -std=c++11
 USR_LDFLAGS  += -lstdc++
 USR_INCLUDES += -I$(where_am_I)$(APPSRC)
 

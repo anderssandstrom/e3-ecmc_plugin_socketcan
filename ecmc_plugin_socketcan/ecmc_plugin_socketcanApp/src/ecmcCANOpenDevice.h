@@ -13,6 +13,7 @@
 #define ECMC_CANOPEN_DEVICE_H_
 
 #include <stdexcept>
+#include <atomic>
 #include "ecmcDataItem.h"
 #include "ecmcAsynPortDriver.h"
 #include "ecmcSocketCANDefs.h"
@@ -22,6 +23,7 @@
 #include <string>
 #include "ecmcSocketCANWriteBuffer.h"
 #include "epicsMutex.h"
+
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
@@ -73,6 +75,7 @@ class ecmcCANOpenDevice {
   ecmcCANOpenPDO *pdos_[ECMC_CAN_DEVICE_PDO_MAX_COUNT];
   ecmcCANOpenSDO *sdos_[ECMC_CAN_DEVICE_SDO_MAX_COUNT];
   bool isMaster_;
+  std::atomic_flag sdo1Busy_;
 };
 
 #endif  /* ECMC_CANOPEN_DEVICE_H_ */
