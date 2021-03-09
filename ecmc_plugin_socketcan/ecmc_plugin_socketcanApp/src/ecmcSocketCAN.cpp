@@ -69,9 +69,9 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   //syncPdo_      = NULL;
   //heartPdo_     = NULL;
   //basicConfSdo_ = NULL;
-  testDevice_     = NULL;
-  testMaster_     = NULL;
-  cycleCounter_   = 0;
+  //testDevice_     = NULL;
+  //testMaster_     = NULL;
+  //cycleCounter_   = 0;
   deviceCounter_  = 0;
   masterDev_      = NULL;
   for(int i = 0; i<ECMC_CAN_MAX_DEVICES;i++) {
@@ -106,29 +106,29 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
     connectPrivate();
   }
   writeBuffer_ = new ecmcSocketCANWriteBuffer(socketId_, cfgDbgMode_);
-  testDevice_ = new ecmcCANOpenDevice(writeBuffer_,3,exeSampleTimeMs_,"pmu905",cfgDbgMode_);
-
-  //testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,7000,exeSampleTimeMs_, cfgDbgMode_);
-  testDevice_->addSDO(0x583,    // 0x580 + CobId
-                      0x603,    // 0x600 + Cobid
-                      DIR_READ,
-                      0x2640,    // Object dictionary index
-                      0x0, // Object dictionary subindex
-                      56,
-                      7000,
-                      "analogValues");
-
-  //testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,0,exeSampleTimeMs_, cfgDbgMode_);
-  testDevice_->addPDO(0x183,
-                      DIR_READ,                      
-                      8,
-                      10000,
-                      0,
-                      "status");  
-
-
-
-  testMaster_= new ecmcCANOpenMaster(writeBuffer_,1,exeSampleTimeMs_,1000,1000,1000,"linuxMaster",cfgDbgMode_);
+  //testDevice_ = new ecmcCANOpenDevice(writeBuffer_,3,exeSampleTimeMs_,"pmu905",cfgDbgMode_);
+//
+  ////testSdo_ = new ecmcCANOpenSDO( writeBuffer_, 0x583,0x603,DIR_READ,0x2640,0,56,7000,exeSampleTimeMs_, cfgDbgMode_);
+  //testDevice_->addSDO(0x583,    // 0x580 + CobId
+  //                    0x603,    // 0x600 + Cobid
+  //                    DIR_READ,
+  //                    0x2640,    // Object dictionary index
+  //                    0x0, // Object dictionary subindex
+  //                    56,
+  //                    7000,
+  //                    "analogValues");
+//
+  ////testPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x183,DIR_READ,8,10000,0,exeSampleTimeMs_, cfgDbgMode_);
+  //testDevice_->addPDO(0x183,
+  //                    DIR_READ,                      
+  //                    8,
+  //                    10000,
+  //                    0,
+  //                    "status");  
+//
+//
+//
+  //testMaster_= new ecmcCANOpenMaster(writeBuffer_,1,exeSampleTimeMs_,1000,1000,1000,"linuxMaster",cfgDbgMode_);
 
 
   // Test LSS heartbeat "master" signal. This makes the led on pmu905 to go to "Normal Communication"
@@ -283,12 +283,12 @@ void ecmcSocketCAN::doReadWorker() {
       devices_[i]->newRxFrame(&rxmsg_);
     }
 
-    if(testDevice_) {
-      testDevice_->newRxFrame(&rxmsg_);
-    }    
-    if(testMaster_) {
-      testMaster_->newRxFrame(&rxmsg_);
-    }    
+//    if(testDevice_) {
+//      testDevice_->newRxFrame(&rxmsg_);
+//    }    
+//    if(testMaster_) {
+//      testMaster_->newRxFrame(&rxmsg_);
+//    }    
 
     //if(basicConfSdo_) {
     //  basicConfSdo_->newRxFrame(&rxmsg_);
@@ -379,12 +379,12 @@ void  ecmcSocketCAN::execute() {
   //   heartPdo_->execute();
   // }
 
-  if(testMaster_) {
-    testMaster_->execute();
-  }
-  if(testDevice_) {
-    testDevice_->execute();
-  }
+//  if(testMaster_) {
+//    testMaster_->execute();
+//  }
+//  if(testDevice_) {
+//    testDevice_->execute();
+//  }
 
   for(int i = 0; i < deviceCounter_; i++){
     devices_[i]->execute();

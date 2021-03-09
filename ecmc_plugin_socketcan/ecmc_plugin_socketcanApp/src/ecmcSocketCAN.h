@@ -129,12 +129,10 @@ class ecmcSocketCAN {
   int                   socketId_;
   struct sockaddr_can   addr_;
   struct can_frame      txmsgBuffer_[ECMC_CAN_MAX_WRITE_CMDS];
-  int                   writeCmdCounter_;
-  int                   writeBusy_;
-  int                   lastWriteSumError_;
+  //int                   writeCmdCounter_;
+  //int                   writeBusy_;
+  //int                   lastWriteSumError_;
   int                   exeSampleTimeMs_;
-  
-  int                   deviceCounter_; 
   ecmcSocketCANWriteBuffer *writeBuffer_;
 
   //ecmcCANOpenSDO *testSdo_;
@@ -144,12 +142,13 @@ class ecmcSocketCAN {
   //ecmcCANOpenPDO *heartPdo_;
   //ecmcCANOpenSDO *basicConfSdo_;
 
-  ecmcCANOpenDevice *testDevice_;
-  ecmcCANOpenMaster *testMaster_;
+  //ecmcCANOpenDevice *testDevice_;
+  //ecmcCANOpenMaster *testMaster_;
 
+  int                deviceCounter_; 
   ecmcCANOpenDevice *devices_[ECMC_CAN_MAX_DEVICES];
   ecmcCANOpenMaster *masterDev_;
-  int cycleCounter_;
+  //int cycleCounter_;
 };
 
 #endif  /* ECMC_SOCKETCAN_H_ */
