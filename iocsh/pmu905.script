@@ -62,7 +62,7 @@ ecmcCANOpenAddDevice("pmu905",3)
 #           <ODSize>          : Size of PDO (max 8 bytes).
 #           <readTimeoutMs>   : Readtimeout in ms.
 #           <writeCycleMs>    : Cycle time for write (if <= 0 then only write on change).
-ecmcCANOpenAddPDO("status",3,2,8,10000,0)  # READ
+ecmcCANOpenAddPDO("status",3,0x183,2,8,10000,0)  # READ
 
 #     ecmcCANOpenAddSDO -h
 #        Use ecmcCANOpenAddSDO(<name>, <node id>,.....)
