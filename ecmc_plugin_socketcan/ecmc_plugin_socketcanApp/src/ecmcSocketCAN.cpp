@@ -56,22 +56,27 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
                              char* portName,
                              int exeSampleTimeMs) {
   // Init
-  cfgCanIFStr_ = NULL;
-  cfgDbgMode_  = 0;
+  cfgCanIFStr_    = NULL;
+  cfgDbgMode_     = 0;
   cfgAutoConnect_ = 1;
-  destructs_   = 0;
-  socketId_    = -1;
-  connected_   = 0;
-  writeBuffer_ = NULL;
-  //testSdo_     = NULL;
-  //testPdo_     = NULL;
-  //lssPdo_      = NULL;
-  //syncPdo_     = NULL;
-  //heartPdo_    = NULL;
+  destructs_      = 0;
+  socketId_       = -1;
+  connected_      = 0;
+  writeBuffer_    = NULL;
+  //testSdo_      = NULL;
+  //testPdo_      = NULL;
+  //lssPdo_       = NULL;
+  //syncPdo_      = NULL;
+  //heartPdo_     = NULL;
   //basicConfSdo_ = NULL;
-  testDevice_   = NULL;
-  testMaster_   = NULL;
-  cycleCounter_ = 0;
+  testDevice_     = NULL;
+  testMaster_     = NULL;
+  cycleCounter_   = 0;
+  deviceCounter_  = 0;
+  masterDev_      = NULL;
+  for(int i = 0; i<ECMC_CAN_MAX_DEVICES;i++) {
+    devices_[i] = NULL;
+  }
 
   exeSampleTimeMs_ = exeSampleTimeMs;
   
@@ -161,6 +166,11 @@ ecmcSocketCAN::~ecmcSocketCAN() {
   destructs_ = 1;  // maybe need todo in other way..
   doWriteEvent_.signal();
   doConnectEvent_.signal();
+
+  for(int i = 0; i<ECMC_CAN_MAX_DEVICES;i++) {
+    delete devices_[i];
+  }
+
 }
 
 void ecmcSocketCAN::parseConfigStr(char *configStr) {
@@ -268,6 +278,11 @@ void ecmcSocketCAN::doReadWorker() {
 //      heartPdo_->newRxFrame(&rxmsg_);
 //    }    
 
+    // forward all data to devices (also master)
+    for(int i = 0; i < deviceCounter_; i++){
+      devices_[i]->newRxFrame(&rxmsg_);
+    }
+
     if(testDevice_) {
       testDevice_->newRxFrame(&rxmsg_);
     }    
@@ -369,6 +384,10 @@ void  ecmcSocketCAN::execute() {
   }
   if(testDevice_) {
     testDevice_->execute();
+  }
+
+  for(int i = 0; i < deviceCounter_; i++){
+    devices_[i]->execute();
   }
 
   // cycleCounter_++;
@@ -614,3 +633,97 @@ std::string ecmcSocketCAN::to_string(int value) {
 //  return asynSuccess;
 //}
 //
+
+void ecmcSocketCAN::addMaster(uint32_t nodeId,
+                              const char* name) {
+  if(masterDev_) {
+   throw std::runtime_error("Master already added.");
+  }
+  if(deviceCounter_ >= ECMC_CAN_MAX_DEVICES) {
+    throw std::out_of_range("Device array full.");
+  }
+  if(nodeId >= 128) {
+    throw std::out_of_range("Node id out of range.");
+  }
+
+  masterDev_ = new ecmcCANOpenMaster(writeBuffer_,nodeId,exeSampleTimeMs_,name, cfgDbgMode_);
+  // add as a normal device also for execute and rxframe
+  devices_[deviceCounter_] = masterDev_;
+  deviceCounter_++;
+}
+
+void ecmcSocketCAN::addDevice(uint32_t nodeId,
+                              const char* name){
+  if(deviceCounter_ >= ECMC_CAN_MAX_DEVICES) {
+    throw std::out_of_range("Device array full.");
+  }
+  if(nodeId >= 128) {
+    throw std::out_of_range("Node id out of range.");
+  }
+
+  devices_[deviceCounter_] = new ecmcCANOpenDevice(writeBuffer_,nodeId,exeSampleTimeMs_,name, cfgDbgMode_);  
+  deviceCounter_++;
+}
+
+int ecmcSocketCAN::findDeviceWithNodeId(uint32_t nodeId) {
+  for(int i=0; i < deviceCounter_;i++) {
+    if(devices_[i]) {
+      if(devices_[i]->getNodeId() == nodeId) {
+         return i;
+      }
+    }
+  }
+  return -1;
+}
+
+void ecmcSocketCAN::addPDO(uint32_t nodeId,
+                           uint32_t cobId,
+                           ecmc_can_direction rw,
+                           uint32_t ODSize,
+                           int readTimeoutMs,
+                           int writeCycleMs,    //if <0 then write on demand.
+                           const char* name) {
+  int devId = findDeviceWithNodeId(nodeId);
+  if(devId < 0) {
+    throw std::out_of_range("Node id not found in any configured device.");
+  }
+
+  int errorCode = devices_[devId]->addPDO(cobId,
+                                          rw,
+                                          ODSize,
+                                          readTimeoutMs,
+                                          writeCycleMs,
+                                          name);
+  if(errorCode > 0) {
+    throw std::runtime_error("AddPDO() failed.");
+  }
+}
+              
+void ecmcSocketCAN::addSDO(uint32_t nodeId,
+                           uint32_t cobIdTx,    // 0x580 + CobId
+                           uint32_t cobIdRx,    // 0x600 + Cobid
+                           ecmc_can_direction rw,
+                           uint16_t ODIndex,    // Object dictionary index
+                           uint8_t ODSubIndex,  // Object dictionary subindex
+                           uint32_t ODSize,
+                           int readSampleTimeMs,
+                           const char* name) {
+
+  int devId = findDeviceWithNodeId(nodeId);
+  if(devId < 0) {
+    throw std::out_of_range("Node id not found in any configured device.");
+  }
+
+  int errorCode = devices_[devId]->addSDO(cobIdTx,
+                                          cobIdRx,
+                                          rw,
+                                          ODIndex,
+                                          ODSubIndex,
+                                          ODSize,
+                                          readSampleTimeMs,
+                                          name);
+  if(errorCode > 0) {
+    throw std::runtime_error("AddSDO() failed.");
+  }
+
+}

@@ -162,3 +162,8 @@ int ecmcCANOpenDevice::addSDO(uint32_t cobIdTx,    // 0x580 + CobId
   sdoCounter_++;                                       
   return 0;
 }
+
+uint32_t ecmcCANOpenDevice::getNodeId() {
+  return nodeId_;
+}
+

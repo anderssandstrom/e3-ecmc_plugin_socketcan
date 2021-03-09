@@ -33,7 +33,7 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
   syncPdo_  = NULL;
   heartPdo_ = NULL;
   isMaster_ = true;
-  
+
   int errorCode = 0;
 
   // lssPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x7E5,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"lss", cfgDbgMode_);
@@ -51,12 +51,12 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
   // Test sync signal
   // can0  0x80   [0]
   // syncPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x80,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"sync", cfgDbgMode_);
-  errorCode = addPDO(0x80,       // uint32_t cobId,
+  errorCode = addPDO(0x80,        // uint32_t cobId,
                      DIR_WRITE,   // ecmc_can_direction rw,                     
                      0,           // uint32_t ODSize,
                      0,           // int readTimeoutMs,
                      1000,        // int writeCycleMs, if < 0 then write on demand.
-                     "sync");      // const char* name);
+                     "sync");     // const char* name);
 
   if(errorCode) {
     throw std::runtime_error( "Sync PDO NULL.");

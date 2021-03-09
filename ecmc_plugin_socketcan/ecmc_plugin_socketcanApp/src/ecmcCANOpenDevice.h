@@ -58,6 +58,7 @@ class ecmcCANOpenDevice {
              uint32_t ODSize,
              int readSampleTimeMs,
              const char* name);
+  uint32_t getNodeId();             
  protected:
   int validateFrame(can_frame *frame);
   ecmcSocketCANWriteBuffer *writeBuffer_;

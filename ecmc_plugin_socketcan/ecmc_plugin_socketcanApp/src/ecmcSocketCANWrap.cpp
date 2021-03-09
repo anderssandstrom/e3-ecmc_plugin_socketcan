@@ -152,7 +152,7 @@ void deleteSocketCAN() {
 
 void ecmcCANOpenAddMasterPrintHelp() {
   printf("\n");
-  printf("       Use \"ecmcCANOpenAddMaster(<name>, <node id>\n");
+  printf("       Use ecmcCANOpenAddMaster(<name>, <node id>)\n");
   printf("          <name>      : Name of master device.\n");
   printf("          <node id>   : CANOpen node id of master.\n");
   printf("\n");
@@ -170,8 +170,19 @@ int ecmcCANOpenAddMaster(const char* name, int nodeId) {
     return asynSuccess;
   }
 
-  /* CODE HERE*/
+  if(!can) {
+    printf("Plugin not initialized/loaded.\n");
+    return asynError;
+  }
 
+  try {
+    can->addMaster((uint32_t)nodeId,name);
+  }
+  catch(std::exception& e) {
+    printf("Exception: %s. Add master failed.\n",e.what());
+    return asynError;
+  }
+  
   return asynSuccess;
 }
 
@@ -194,9 +205,9 @@ static void initCallFunc_0(const iocshArgBuf *args) {
 
 void ecmcCANOpenAddDevicePrintHelp() {
   printf("\n");
-  printf("       Use \"ecmcCANOpenAddDevice(<name>, <node id>\n");
+  printf("       Use ecmcCANOpenAddDevice(<name>, <node id>)\n");
   printf("          <name>      : Name of device.\n");
-  printf("          <node id>   : CANOpen node id of master.\n");
+  printf("          <node id>   : CANOpen node id of device.\n");
   printf("\n");
 }
 
@@ -212,7 +223,18 @@ int ecmcCANOpenAddDevice(const char* name, int nodeId) {
     return asynSuccess;
   }
 
-  /* CODE HERE*/
+  if(!can) {
+    printf("Plugin not initialized/loaded.\n");
+    return asynError;
+  }
+
+  try {
+    can->addDevice((uint32_t)nodeId,name);
+  }
+  catch(std::exception& e) {
+    printf("Exception: %s. Add device failed.\n",e.what());
+    return asynError;
+  }
 
   return asynSuccess;
 }
@@ -236,13 +258,28 @@ static void initCallFunc_1(const iocshArgBuf *args) {
 
 void ecmcCANOpenAddSDOPrintHelp() {
   printf("\n");
-  printf("       Use \"ecmcCANOpenAddSDO(<name>, <node id>\n");
-  printf("          <name>      : Name of master device.\n");
-  printf("          <node id>   : CANOpen node id of master.\n");
+  printf("  Use ecmcCANOpenAddSDO(<name>, <node id>,.....)\n");
+  printf("          <name>            : Name of master device.\n");
+  printf("          <node id>         : CANOpen node id of device/master.\n");
+  printf("          <cob id tx>       : CANOpen cob id of Tx of slave SDO.\n");
+  printf("          <cob id rx>       : CANOpen cob id of Rx of slave SDO.\n");
+  printf("          <dir>             : Direction 1=write and 2=read.\n");
+  printf("          <ODIndex>         : OD index of SDO.\n");
+  printf("          <ODSubIndex>      : OD sub index of SDO.\n");
+  printf("          <ODSize>          : OS Size.\n");
+  printf("          <readTimeoutMs>   : Readtimeout in ms.\n");
   printf("\n");
 }
 
-int ecmcCANOpenAddSDO(const char* name, int nodeId) {
+int ecmcCANOpenAddSDO(const char* name, 
+                      int nodeId, 
+                      int cobIdTx,
+                      int cobIdRx, 
+                      int dir,
+                      int ODIndex, 
+                      int ODSubIndex,
+                      int ODSize,
+                      int readTimeoutMs) {
   if(!name) {
     printf("Error: name.\n");
     ecmcCANOpenAddSDOPrintHelp();
@@ -254,8 +291,71 @@ int ecmcCANOpenAddSDO(const char* name, int nodeId) {
     return asynSuccess;
   }
 
-  /* CODE HERE*/
+  if(cobIdRx < 0) {
+    printf("Error: invalid cobIdRx.\n");
+    ecmcCANOpenAddSDOPrintHelp();
+    return asynError;
+  }
 
+  if(cobIdTx < 0) {
+    printf("Error: invalid cobIdTx.\n");
+    ecmcCANOpenAddSDOPrintHelp();
+    return asynError;
+  }
+
+  if(dir > 2 || dir <= 0) {
+    printf("Error: invalid dir.\n");
+    ecmcCANOpenAddSDOPrintHelp();
+    return asynError;
+  }
+
+  if(ODIndex < 0) {
+    printf("Error: invalid ODIndex.\n");
+    ecmcCANOpenAddSDOPrintHelp();
+    return asynError;
+  }
+
+  if(ODSubIndex < 0) {
+    printf("Error: invalid ODSubIndex.\n");
+    ecmcCANOpenAddSDOPrintHelp();
+    return asynError;
+  }
+
+  if(ODSize < 0) {
+    printf("Error: invalid ODSize.\n");
+    ecmcCANOpenAddSDOPrintHelp();
+    return asynError;
+  }
+
+  if(readTimeoutMs < 0) {
+    printf("Error: invalid readTimeoutMs.\n");
+    ecmcCANOpenAddSDOPrintHelp();
+    return asynError;
+  }
+
+
+  ecmc_can_direction tempDir = DIR_READ;
+  if(dir == 1) {
+    tempDir = DIR_WRITE;
+  }
+
+  try {
+    can->addSDO((uint32_t)nodeId,
+                 cobIdTx,
+                 cobIdRx,
+                 tempDir,
+                 ODIndex,
+                 ODSubIndex,
+                 ODSize,
+                 readTimeoutMs,
+                 name);
+
+
+  }
+  catch(std::exception& e) {
+    printf("Exception: %s. Add PDO failed.\n",e.what());
+    return asynError;
+  }
   return asynSuccess;
 }
 
@@ -263,28 +363,67 @@ static const iocshArg initArg0_2 =
 { "Name", iocshArgString };
 static const iocshArg initArg1_2 =
 { "Node Id", iocshArgInt };
+static const iocshArg initArg2_2 =
+{ "COB id TX", iocshArgInt };
+static const iocshArg initArg3_2 =
+{ "COB id RX", iocshArgInt };
+static const iocshArg initArg4_2 =
+{ "Direction", iocshArgInt };
+static const iocshArg initArg5_2 =
+{ "OD Index", iocshArgInt };
+static const iocshArg initArg6_2 =
+{ "OD sub index", iocshArgInt };
+static const iocshArg initArg7_2 =
+{ "OD size", iocshArgInt };
+static const iocshArg initArg8_2 =
+{ "Read timeout ms", iocshArgInt };
 
 static const iocshArg *const initArgs_2[]  = { &initArg0_2, 
-                                               &initArg1_2};
+                                               &initArg1_2,
+                                               &initArg2_2,
+                                               &initArg3_2,
+                                               &initArg4_2,
+                                               &initArg5_2,
+                                               &initArg6_2,
+                                               &initArg7_2,
+                                               &initArg8_2};
 
-static const iocshFuncDef    initFuncDef_2 = { "ecmcCANOpenAddSDO", 2, initArgs_2 };
+static const iocshFuncDef    initFuncDef_2 = { "ecmcCANOpenAddSDO", 9, initArgs_2 };
 static void initCallFunc_2(const iocshArgBuf *args) {
-  ecmcCANOpenAddSDO(args[0].sval, args[1].ival);
+  ecmcCANOpenAddSDO(args[0].sval,
+                    args[1].ival,
+                    args[2].ival,
+                    args[3].ival,
+                    args[4].ival,
+                    args[5].ival,
+                    args[6].ival,
+                    args[7].ival,
+                    args[8].ival);
 }
 
 /** 
  * EPICS iocsh shell command: ecmcCANOpenAddPDO
 */
-
 void ecmcCANOpenAddPDOPrintHelp() {
   printf("\n");
-  printf("       Use \"ecmcCANOpenAddPDO(<name>, <node id>\n");
-  printf("          <name>      : Name of master device.\n");
-  printf("          <node id>   : CANOpen node id of master.\n");
+  printf("     Use \"ecmcCANOpenAddSDO(<name>, <node id>\n");
+  printf("          <name>            : Name of master device.\n");
+  printf("          <node id>         : CANOpen node id of device/master.\n");
+  printf("          <cob id>          : CANOpen cob id of PDO.\n");
+  printf("          <dir>             : Direction 1=write and 2=read.\n");
+  printf("          <ODSize>          : Size of PDO (max 8 bytes).\n");
+  printf("          <readTimeoutMs>   : Readtimeout in ms.\n");
+  printf("          <writeCycleMs>    : Cycle time for write (if <= 0 then only write on change).\n");
   printf("\n");
 }
 
-int ecmcCANOpenAddPDO(const char* name, int nodeId) {
+int ecmcCANOpenAddPDO(const char* name, 
+                      int nodeId, 
+                      int cobId, 
+                      int dir, 
+                      int ODSize,
+                      int readTimeoutMs,
+                      int writeCycleMs) {
   if(!name) {
     printf("Error: name.\n");
     ecmcCANOpenAddPDOPrintHelp();
@@ -296,8 +435,47 @@ int ecmcCANOpenAddPDO(const char* name, int nodeId) {
     return asynSuccess;
   }
 
-  /* CODE HERE*/
+  if(dir > 2 || dir <= 0) {
+    printf("Error: invalid dir.\n");
+    ecmcCANOpenAddPDOPrintHelp();
+    return asynError;
+  }
 
+  if(ODSize < 0) {
+    printf("Error: invalid ODSize.\n");
+    ecmcCANOpenAddPDOPrintHelp();
+    return asynError;
+  }
+
+  if(readTimeoutMs < 0) {
+    printf("Error: invalid readTimeoutMs.\n");
+    ecmcCANOpenAddPDOPrintHelp();
+    return asynError;
+  }
+
+  if(writeCycleMs < 0) {
+    printf("Error: invalid writeCycleMs.\n");
+    ecmcCANOpenAddPDOPrintHelp();
+    return asynError;
+  }
+
+  ecmc_can_direction tempDir = DIR_READ;
+  if(dir == 1) {
+    tempDir = DIR_WRITE;
+  }
+
+  try {
+    can->addPDO((uint32_t)nodeId,
+                 cobId,
+                 tempDir,
+                 ODSize,
+                 readTimeoutMs,
+                 writeCycleMs,name);
+  }
+  catch(std::exception& e) {
+    printf("Exception: %s. Add PDO failed.\n",e.what());
+    return asynError;
+  }
   return asynSuccess;
 }
 
@@ -305,13 +483,35 @@ static const iocshArg initArg0_3 =
 { "Name", iocshArgString };
 static const iocshArg initArg1_3 =
 { "Node Id", iocshArgInt };
+static const iocshArg initArg2_3 =
+{ "COB Id", iocshArgInt };
+static const iocshArg initArg3_3 =
+{ "Direction", iocshArgInt };
+static const iocshArg initArg4_3 =
+{ "ODSize", iocshArgInt };
+static const iocshArg initArg5_3 =
+{ "Read Timeout ms", iocshArgInt };
+static const iocshArg initArg6_3 =
+{ "Write cycle ms", iocshArgInt };
 
 static const iocshArg *const initArgs_3[]  = { &initArg0_3,
-                                               &initArg1_3};
+                                               &initArg1_3,
+                                               &initArg2_3,
+                                               &initArg3_3,
+                                               &initArg4_3,
+                                               &initArg5_3,
+                                               &initArg6_3
+                                               };
 
-static const iocshFuncDef    initFuncDef_3 = { "ecmcCANOpenAddPDO", 2, initArgs_3 };
+static const iocshFuncDef    initFuncDef_3 = { "ecmcCANOpenAddPDO", 7, initArgs_3 };
 static void initCallFunc_3(const iocshArgBuf *args) {
-  ecmcCANOpenAddPDO(args[0].sval, args[1].ival);
+  ecmcCANOpenAddPDO(args[0].sval,
+                    args[1].ival,
+                    args[2].ival,
+                    args[3].ival,
+                    args[4].ival,
+                    args[5].ival,
+                    args[6].ival);
 }
 
 /** 

@@ -19,8 +19,8 @@
 #define ECMC_PLUGIN_CONNECT_OPTION_CMD     "CONNECT="
 
 enum ecmc_can_direction {
-    DIR_READ, 
-    DIR_WRITE };
+    DIR_WRITE = 1,
+    DIR_READ  = 2 };
 
 enum ecmc_read_states {
     READ_IDLE,

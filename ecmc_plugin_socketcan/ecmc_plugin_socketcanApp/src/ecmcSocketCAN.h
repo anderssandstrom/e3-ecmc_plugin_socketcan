@@ -36,6 +36,7 @@
 #include <linux/can/raw.h>
 
 #define ECMC_CAN_MAX_WRITE_CMDS 128
+#define ECMC_CAN_MAX_DEVICES 128
 #define ECMC_CAN_ERROR_WRITE_FULL 10
 #define ECMC_CAN_ERROR_WRITE_BUSY 11
 #define ECMC_CAN_ERROR_WRITE_NO_DATA 12
@@ -80,6 +81,32 @@ class ecmcSocketCAN {
                                     uint8_t data7);
   int                   getlastWritesError();
   void                  execute();  // ecmc rt loop
+  
+  void                  addMaster(uint32_t nodeId,
+                                  const char* name);
+
+  void                  addDevice(uint32_t nodeId,
+                                  const char* name);
+
+  void                  addPDO(uint32_t nodeId,
+                               uint32_t cobId,
+                               ecmc_can_direction rw,
+                               uint32_t ODSize,
+                               int readTimeoutMs,
+                               int writeCycleMs,    //if <0 then write on demand.
+                               const char* name);
+                  
+  void                  addSDO(uint32_t nodeId,
+                               uint32_t cobIdTx,    // 0x580 + CobId
+                               uint32_t cobIdRx,    // 0x600 + Cobid
+                               ecmc_can_direction rw,
+                               uint16_t ODIndex,    // Object dictionary index
+                               uint8_t ODSubIndex,  // Object dictionary subindex
+                               uint32_t ODSize,
+                               int readSampleTimeMs,
+                               const char* name);
+
+  int                   findDeviceWithNodeId(uint32_t nodeId);
 
  private:
   void                  parseConfigStr(char *configStr);
@@ -104,7 +131,9 @@ class ecmcSocketCAN {
   int                   lastWriteSumError_;
   int                   exeSampleTimeMs_;
   
+  int                   deviceCounter_; 
   ecmcSocketCANWriteBuffer *writeBuffer_;
+
   //ecmcCANOpenSDO *testSdo_;
   //ecmcCANOpenPDO *testPdo_;
   //ecmcCANOpenPDO *lssPdo_;
@@ -113,7 +142,10 @@ class ecmcSocketCAN {
   //ecmcCANOpenSDO *basicConfSdo_;
 
   ecmcCANOpenDevice *testDevice_;
-  ecmcCANOpenDevice *testMaster_;
+  ecmcCANOpenMaster *testMaster_;
+
+  ecmcCANOpenDevice *devices_[ECMC_CAN_MAX_DEVICES];
+  ecmcCANOpenMaster *masterDev_;
   int cycleCounter_;
 };
 
