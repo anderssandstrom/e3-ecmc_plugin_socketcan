@@ -56,6 +56,8 @@ SOURCES += $(APPSRC)/ecmcCANOpenPDO.cpp
 SOURCES += $(APPSRC)/ecmcCANOpenDevice.cpp
 SOURCES += $(APPSRC)/ecmcCANOpenMaster.cpp
 
+DBDS    += $(APPSRC)/ecmcSocketCAN.dbd
+
 db:
 
 .PHONY: db

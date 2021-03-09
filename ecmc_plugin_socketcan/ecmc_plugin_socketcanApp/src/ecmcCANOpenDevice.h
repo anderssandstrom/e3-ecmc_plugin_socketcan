@@ -71,6 +71,7 @@ class ecmcCANOpenDevice {
   char* name_;
   ecmcCANOpenPDO *pdos_[ECMC_CAN_DEVICE_PDO_MAX_COUNT];
   ecmcCANOpenSDO *sdos_[ECMC_CAN_DEVICE_SDO_MAX_COUNT];
+  bool isMaster_;
 };
 
 #endif  /* ECMC_CANOPEN_DEVICE_H_ */

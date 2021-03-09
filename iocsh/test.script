@@ -21,7 +21,7 @@ $(ECMCCFG_INIT)$(SCRIPTEXEC) ${ecmccfg_DIR}startup.cmd, "IOC=$(IOC),ECMC_VER=6.3
 
 ##############################################################################
 ## Load plugin:
-#require ecmc_plugin_advanced master # do not require then loaded twice..
+require ecmc_plugin_socketcan master # do not require then loaded twice..
 
 epicsEnvSet(ECMC_PLUGIN_FILNAME,"/home/dev/epics/base-7.0.4/require/${E3_REQUIRE_VERSION}/siteMods/ecmc_plugin_socketcan/master/lib/${EPICS_HOST_ARCH=linux-x86_64}/libecmc_plugin_socketcan.so")
 epicsEnvSet(ECMC_PLUGIN_CONFIG,"IF=can0;DBG_PRINT=1;") # Only one option implemented in this plugin

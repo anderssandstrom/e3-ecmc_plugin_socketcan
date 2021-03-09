@@ -32,8 +32,10 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
   lssPdo_   = NULL;
   syncPdo_  = NULL;
   heartPdo_ = NULL;
-  int errorCode = 0;
+  isMaster_ = true;
   
+  int errorCode = 0;
+
   // lssPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x7E5,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"lss", cfgDbgMode_);
   errorCode = addPDO(0x7E5,       // uint32_t cobId,
                      DIR_WRITE,   // ecmc_can_direction rw,                     

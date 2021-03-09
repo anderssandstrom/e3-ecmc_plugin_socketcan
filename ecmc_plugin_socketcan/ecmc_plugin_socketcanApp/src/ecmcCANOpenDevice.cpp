@@ -32,7 +32,7 @@ ecmcCANOpenDevice::ecmcCANOpenDevice(ecmcSocketCANWriteBuffer* writeBuffer,
   errorCode_          = 0;
   dbgMode_            = dbgMode;
   name_               = strdup(name);
-
+  isMaster_           = false;
   pdoCounter_ = 0;
   sdoCounter_ = 0;
 
@@ -77,7 +77,8 @@ void ecmcCANOpenDevice::execute() {
 // new rx frame recived!
 void ecmcCANOpenDevice::newRxFrame(can_frame *frame) {
 
-  if (!validateFrame(frame)) {
+  // only validate if not master
+  if (!validateFrame(frame) && !isMaster_) {
     return;
   }
 

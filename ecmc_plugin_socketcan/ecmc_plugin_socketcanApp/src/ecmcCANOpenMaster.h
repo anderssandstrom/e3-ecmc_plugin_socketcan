@@ -39,7 +39,7 @@ class ecmcCANOpenMaster : public ecmcCANOpenDevice {
   private:
     ecmcCANOpenPDO *lssPdo_;
     ecmcCANOpenPDO *syncPdo_;
-    ecmcCANOpenPDO *heartPdo_;
+    ecmcCANOpenPDO *heartPdo_;    
 };
 
 #endif  /* ECMC_CANOPEN_MASTER_H_ */
