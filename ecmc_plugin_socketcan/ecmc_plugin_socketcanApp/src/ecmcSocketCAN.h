@@ -83,7 +83,10 @@ class ecmcSocketCAN {
   void                  execute();  // ecmc rt loop
   
   void                  addMaster(uint32_t nodeId,
-                                  const char* name);
+                                  const char* name,
+                                  int lssSampleTimeMs,
+                                  int syncSampleTimeMs,
+                                  int heartSampleTimeMs);
 
   void                  addDevice(uint32_t nodeId,
                                   const char* name);

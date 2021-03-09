@@ -32,6 +32,9 @@ class ecmcCANOpenMaster : public ecmcCANOpenDevice {
   ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
                     uint32_t nodeId,
                     int exeSampleTimeMs,
+                    int lssSampleTimeMs,
+                    int syncSampleTimeMs,
+                    int heartSampleTimeMs,
                     const char* name,
                     int dbgMode);
   ~ecmcCANOpenMaster();
@@ -39,7 +42,10 @@ class ecmcCANOpenMaster : public ecmcCANOpenDevice {
   private:
     ecmcCANOpenPDO *lssPdo_;
     ecmcCANOpenPDO *syncPdo_;
-    ecmcCANOpenPDO *heartPdo_;    
+    ecmcCANOpenPDO *heartPdo_;
+    int lssSampleTimeMs_;
+    int syncSampleTimeMs_;
+    int heartSampleTimeMs_;
 };
 
 #endif  /* ECMC_CANOPEN_MASTER_H_ */

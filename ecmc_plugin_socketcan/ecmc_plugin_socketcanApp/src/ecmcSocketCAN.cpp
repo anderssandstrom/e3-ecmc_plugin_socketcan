@@ -128,7 +128,7 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
 
 
 
-  testMaster_= new ecmcCANOpenMaster(writeBuffer_,1,exeSampleTimeMs_,"linuxMaster",cfgDbgMode_);
+  testMaster_= new ecmcCANOpenMaster(writeBuffer_,1,exeSampleTimeMs_,1000,1000,1000,"linuxMaster",cfgDbgMode_);
 
 
   // Test LSS heartbeat "master" signal. This makes the led on pmu905 to go to "Normal Communication"
@@ -635,7 +635,11 @@ std::string ecmcSocketCAN::to_string(int value) {
 //
 
 void ecmcSocketCAN::addMaster(uint32_t nodeId,
-                              const char* name) {
+                              const char* name,
+                              int lssSampleTimeMs,
+                              int syncSampleTimeMs,
+                              int heartSampleTimeMs) {
+
   if(masterDev_) {
    throw std::runtime_error("Master already added.");
   }
@@ -646,7 +650,26 @@ void ecmcSocketCAN::addMaster(uint32_t nodeId,
     throw std::out_of_range("Node id out of range.");
   }
 
-  masterDev_ = new ecmcCANOpenMaster(writeBuffer_,nodeId,exeSampleTimeMs_,name, cfgDbgMode_);
+  if(lssSampleTimeMs <= 0) {
+    throw std::out_of_range("LSS sample time ms out of range.");
+  }
+
+  if(syncSampleTimeMs <= 0) {
+    throw std::out_of_range("Sync sample time ms out of range.");
+  }
+
+  if(heartSampleTimeMs <= 0) {
+    throw std::out_of_range("Heart sample time ms out of range.");
+  }
+
+  masterDev_ = new ecmcCANOpenMaster(writeBuffer_,
+                                     nodeId,
+                                     exeSampleTimeMs_,
+                                     lssSampleTimeMs,
+                                     syncSampleTimeMs,
+                                     heartSampleTimeMs,
+                                     name,
+                                     cfgDbgMode_);
   // add as a normal device also for execute and rxframe
   devices_[deviceCounter_] = masterDev_;
   deviceCounter_++;

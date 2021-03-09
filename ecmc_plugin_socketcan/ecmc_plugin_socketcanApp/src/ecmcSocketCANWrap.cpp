@@ -152,13 +152,21 @@ void deleteSocketCAN() {
 
 void ecmcCANOpenAddMasterPrintHelp() {
   printf("\n");
-  printf("       Use ecmcCANOpenAddMaster(<name>, <node id>)\n");
-  printf("          <name>      : Name of master device.\n");
-  printf("          <node id>   : CANOpen node id of master.\n");
+  printf("       Use ecmcCANOpenAddMaster(<name>, <node id>,....)\n");
+  printf("          <name>                     : Name of master device.\n");
+  printf("          <node id>                  : CANOpen node id of master.\n");
+  printf("          <LSS sample time ms>       : Sample time for LSS.\n");
+  printf("          <Sync sample time ms>      : Sample time for SYNC.\n");
+  printf("          <Heartbeat sample time ms> : Sample time for Heartbeat.\n");
   printf("\n");
 }
 
-int ecmcCANOpenAddMaster(const char* name, int nodeId) {
+int ecmcCANOpenAddMaster(const char* name,
+                         int nodeId,
+                         int lssSampleTimeMs,
+                         int syncSampleTimeMs,
+                         int heartSampleTimeMs) {
+
   if(!name) {
     printf("Error: name.\n");
     ecmcCANOpenAddMasterPrintHelp();
@@ -176,7 +184,11 @@ int ecmcCANOpenAddMaster(const char* name, int nodeId) {
   }
 
   try {
-    can->addMaster((uint32_t)nodeId,name);
+    can->addMaster((uint32_t)nodeId,
+                   name,
+                   lssSampleTimeMs,
+                   syncSampleTimeMs,
+                   heartSampleTimeMs);
   }
   catch(std::exception& e) {
     printf("Exception: %s. Add master failed.\n",e.what());
@@ -190,13 +202,26 @@ static const iocshArg initArg0_0 =
 { "Name", iocshArgString };
 static const iocshArg initArg1_0 =
 { "Node Id", iocshArgInt };
+static const iocshArg initArg2_0 =
+{ "LSS sample time ms", iocshArgInt };
+static const iocshArg initArg3_0 =
+{ "Sync sample time ms", iocshArgInt };
+static const iocshArg initArg4_0 =
+{ "Heart sample time ms", iocshArgInt };
 
 static const iocshArg *const initArgs_0[]  = { &initArg0_0, 
-                                               &initArg1_0};
+                                               &initArg1_0,
+                                               &initArg2_0,
+                                               &initArg3_0,
+                                               &initArg4_0};
 
-static const iocshFuncDef    initFuncDef_0 = { "ecmcCANOpenAddMaster", 2, initArgs_0 };
+static const iocshFuncDef    initFuncDef_0 = { "ecmcCANOpenAddMaster", 5, initArgs_0 };
 static void initCallFunc_0(const iocshArgBuf *args) {
-  ecmcCANOpenAddMaster(args[0].sval, args[1].ival);
+  ecmcCANOpenAddMaster(args[0].sval,
+                       args[1].ival,
+                       args[2].ival,
+                       args[3].ival,
+                       args[4].ival);
 }
 
 /** 
@@ -406,7 +431,7 @@ static void initCallFunc_2(const iocshArgBuf *args) {
 */
 void ecmcCANOpenAddPDOPrintHelp() {
   printf("\n");
-  printf("     Use \"ecmcCANOpenAddSDO(<name>, <node id>\n");
+  printf("     Use \"ecmcCANOpenAddPDO(<name>, <node id>\n");
   printf("          <name>            : Name of master device.\n");
   printf("          <node id>         : CANOpen node id of device/master.\n");
   printf("          <cob id>          : CANOpen cob id of PDO.\n");

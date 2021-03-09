@@ -22,6 +22,9 @@
 ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
                                      uint32_t nodeId,
                                      int exeSampleTimeMs,
+                                     int lssSampleTimeMs,
+                                     int syncSampleTimeMs,
+                                     int heartSampleTimeMs,
                                      const char* name,
                                      int dbgMode): 
                    ecmcCANOpenDevice(writeBuffer,
@@ -29,20 +32,23 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
                                      exeSampleTimeMs,
                                      name,
                                      dbgMode) {
-  lssPdo_   = NULL;
-  syncPdo_  = NULL;
-  heartPdo_ = NULL;
-  isMaster_ = true;
+  lssPdo_            = NULL;
+  syncPdo_           = NULL;
+  heartPdo_          = NULL;
+  isMaster_          = true;
+  lssSampleTimeMs_   = lssSampleTimeMs;
+  syncSampleTimeMs_  = syncSampleTimeMs;
+  heartSampleTimeMs_ = heartSampleTimeMs;
 
   int errorCode = 0;
 
   // lssPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x7E5,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"lss", cfgDbgMode_);
-  errorCode = addPDO(0x7E5,       // uint32_t cobId,
-                     DIR_WRITE,   // ecmc_can_direction rw,                     
-                     0,           // uint32_t ODSize,
-                     0,           // int readTimeoutMs,
-                     1000,        // int writeCycleMs, if < 0 then write on demand.
-                     "lss");      // const char* name);
+  errorCode = addPDO(0x7E5,              // uint32_t cobId,
+                     DIR_WRITE,          // ecmc_can_direction rw,                     
+                     0,                  // uint32_t ODSize,
+                     0,                  // int readTimeoutMs,
+                     lssSampleTimeMs,    // int writeCycleMs, if < 0 then write on demand.
+                     "lss");             // const char* name);
   if(errorCode) {
     throw std::runtime_error( "LSS PDO NULL.");
   }
@@ -51,12 +57,12 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
   // Test sync signal
   // can0  0x80   [0]
   // syncPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x80,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"sync", cfgDbgMode_);
-  errorCode = addPDO(0x80,        // uint32_t cobId,
-                     DIR_WRITE,   // ecmc_can_direction rw,                     
-                     0,           // uint32_t ODSize,
-                     0,           // int readTimeoutMs,
-                     1000,        // int writeCycleMs, if < 0 then write on demand.
-                     "sync");     // const char* name);
+  errorCode = addPDO(0x80,               // uint32_t cobId,
+                     DIR_WRITE,          // ecmc_can_direction rw,                     
+                     0,                  // uint32_t ODSize,
+                     0,                  // int readTimeoutMs,
+                     syncSampleTimeMs,   // int writeCycleMs, if < 0 then write on demand.
+                     "sync");            // const char* name);
 
   if(errorCode) {
     throw std::runtime_error( "Sync PDO NULL.");
@@ -68,12 +74,12 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
   //can_add_write(1793,1,5,0,0,0,0,0,0,0);
   //heartPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x701,DIR_WRITE,1,0,1000,exeSampleTimeMs_,"heartbeat",cfgDbgMode_);
   //heartPdo_->setValue(5);
-  errorCode = addPDO(0x700+nodeId_,       // uint32_t cobId,
-                     DIR_WRITE,   // ecmc_can_direction rw,                     
-                     1,           // uint32_t ODSize,
-                     0,           // int readTimeoutMs,
-                     1000,        // int writeCycleMs, if < 0 then write on demand.
-                     "heart");    // const char* name);
+  errorCode = addPDO(0x700+nodeId_,     // uint32_t cobId,
+                     DIR_WRITE,         // ecmc_can_direction rw,                     
+                     1,                 // uint32_t ODSize,
+                     0,                 // int readTimeoutMs,
+                     heartSampleTimeMs, // int writeCycleMs, if < 0 then write on demand.
+                     "heart");          // const char* name);
   if(errorCode) {
     throw std::runtime_error( "Heart PDO NULL.");
   }
