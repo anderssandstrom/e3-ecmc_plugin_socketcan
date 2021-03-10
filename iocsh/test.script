@@ -77,7 +77,7 @@ ecmcCANOpenAddDevice("testDevice",3)
 #           <ODSize>          : Size of PDO (max 8 bytes).
 #           <readTimeoutMs>   : Readtimeout in ms.
 #           <writeCycleMs>    : Cycle time for write (if <= 0 then only write on change).
-ecmcCANOpenAddPDO("status",3,0x183,2,8,10000,0)  # READ
+ecmcCANOpenAddPDO("status1",3,0x183,2,8,10000,0)  # READ
 
 #     ecmcCANOpenAddSDO -h
 #        Use ecmcCANOpenAddSDO(<name>, <node id>,.....)
@@ -91,7 +91,10 @@ ecmcCANOpenAddPDO("status",3,0x183,2,8,10000,0)  # READ
 #           <ODSize>          : OS Size.
 #           <readTimeoutMs>   : Readtimeout in ms.
 #
-ecmcCANOpenAddSDO("analogValues",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+ecmcCANOpenAddSDO("analogValues1",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+ecmcCANOpenAddSDO("analogValues2",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+ecmcCANOpenAddSDO("analogValues3",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+ecmcCANOpenAddSDO("analogValues4",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
 ecmcCANOpenAddSDO("basicConfig",3,0x583,0x603,1,0x2690,0x1,7,0)      # WRITE
 
 ##############################################################################

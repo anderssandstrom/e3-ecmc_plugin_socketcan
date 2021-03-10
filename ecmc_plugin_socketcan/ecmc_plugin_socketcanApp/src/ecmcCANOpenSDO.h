@@ -94,8 +94,6 @@ class ecmcCANOpenSDO {
   epicsMutexId  dataMutex_;
   epicsMutexId  getLockMutex_;
   int busyCounter_;
-  //std::atomic_flag *ptrSdo1Busy_;
-  //std::atomic_flag busy_;
   std::atomic_flag *ptrSdo1Lock_;
   bool busy_;
 };
