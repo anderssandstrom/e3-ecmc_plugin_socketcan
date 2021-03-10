@@ -20,6 +20,7 @@
 
 #define ECMC_SDO_REPLY_TIMOUT_MS           200
 
+#define ECMC_PLUGIN_ASYN_PREFIX      "plugin.can"
 
 enum ecmc_can_direction {
     DIR_WRITE = 1,

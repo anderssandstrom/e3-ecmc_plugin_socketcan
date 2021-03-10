@@ -15,6 +15,9 @@
 
 #include <sstream>
 #include "ecmcCANOpenSDO.h"
+#include "ecmcAsynPortDriver.h"
+#include "ecmcPluginClient.h"
+
 
 #define ECMC_SDO_TRANSFER_MAX_BYTES 7
 
@@ -22,6 +25,7 @@
  * ecmc ecmcCANOpenSDO class
 */
 ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
+                               uint32_t nodeId,
                                uint32_t cobIdTx,  // 0x580 + CobId
                                uint32_t cobIdRx,  // 0x600 + Cobid
                                ecmc_can_direction rw,
@@ -35,6 +39,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
                                int dbgMode) {
 
   writeBuffer_        = writeBuffer;
+  nodeId_             = nodeId;
   cobIdRx_            = cobIdRx;
   cobIdTx_            = cobIdTx;
   ODIndex_            = ODIndex;
@@ -174,6 +179,8 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   writeConfReqFrameTg1_.data[6] = 0;
   writeConfReqFrameTg1_.data[7] = 0;
   busy_ = false;
+  
+  initAsyn();
 }
 
 ecmcCANOpenSDO::~ecmcCANOpenSDO() {
@@ -534,3 +541,203 @@ int ecmcCANOpenSDO::unlockSdo1() {
 //# r 0x583 [8] 0x10 0x00 0xC8 0x48 0x51 0x2F 0x00 0x00
 //# r 0x583 [8] 0x00 0x5C 0x2D 0x81 0x14 0x67 0x0D 0xA6
 //
+
+void ecmcCANOpenSDO::initAsyn() {
+
+   ecmcAsynPortDriver *ecmcAsynPort = (ecmcAsynPortDriver *)getEcmcAsynPortDriver();
+   if(!ecmcAsynPort) {
+     printf("ERROR: ecmcAsynPort NULL.");
+     throw std::runtime_error( "ERROR: ecmcAsynPort NULL." );
+   }
+
+  // Add resultdata "plugin.can.dev%d.<name>"
+  std::string paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".dev") + to_string(nodeId_) + "." + std::string(name_);
+
+  dataParam_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt8Array,    // asyn type 
+                                          dataBuffer_,           // pointer to data
+                                          ODSize_,               // size of data
+                                          ECMC_EC_U8,            // ecmc data type
+                                          0);                    // die if fail
+
+  if(!dataParam_) {
+    printf("ERROR: Failed create asyn param for data.");
+    throw std::runtime_error( "ERROR: Failed create asyn param for data: " + paramName);
+  }
+  
+  // Allow different types depending on size
+  if(ODSize_>1){
+    dataParam_->addSupportedAsynType(asynParamInt16Array);
+  }
+  if(ODSize_>3){
+    dataParam_->addSupportedAsynType(asynParamInt32Array);
+    dataParam_->addSupportedAsynType(asynParamFloat32Array);
+    dataParam_->addSupportedAsynType(asynParamInt32);
+  }
+  if(ODSize_>7){
+    dataParam_->addSupportedAsynType(asynParamFloat64Array);
+    dataParam_->addSupportedAsynType(asynParamFloat64);
+  }
+
+  dataParam_->setAllowWriteToEcmc(rw_ == DIR_WRITE);
+
+  dataParam_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);  
+
+  // Add enable "plugin.scope%d.enable"
+  /*paramName = ECMC_PLUGIN_ASYN_PREFIX + to_string(objectId_) + 
+                          "." + ECMC_PLUGIN_ASYN_ENABLE;
+
+  enbaleParam_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt32,        // asyn type 
+                                          (uint8_t*)&cfgEnable_, // pointer to data
+                                          sizeof(cfgEnable_),    // size of data
+                                          ECMC_EC_S32,           // ecmc data type
+                                          0);                    // die if fail
+
+  if(!enbaleParam_) {
+    SOCKETCAN_DBG_PRINT("ERROR: Failed create asyn param for enable.");
+    throw std::runtime_error( "ERROR: Failed create asyn param for enable: " + paramName);
+  }
+
+  enbaleParam_->setAllowWriteToEcmc(true);
+  enbaleParam_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);  
+
+  // Add missed triggers "plugin.scope%d.missed"
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + to_string(objectId_) + 
+                          "." + ECMC_PLUGIN_ASYN_MISSED;
+
+  asynMissedTriggs_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt32,        // asyn type 
+                                          (uint8_t*)&missedTriggs_, // pointer to data
+                                          sizeof(missedTriggs_),    // size of data
+                                          ECMC_EC_S32,           // ecmc data type
+                                          0);                    // die if fail
+
+  if(!asynMissedTriggs_) {
+    SOCKETCAN_DBG_PRINT("ERROR: Failed create asyn param for missed trigg counter.");   
+    throw std::runtime_error( "ERROR: Failed create asyn param for missed trigg counter: " + paramName);
+  }
+
+  asynMissedTriggs_->setAllowWriteToEcmc(false);
+  asynMissedTriggs_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);  
+
+  // Add trigger counter "plugin.scope%d.count"
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + to_string(objectId_) + 
+                          "." + ECMC_PLUGIN_ASYN_TRIGG_COUNT;
+
+  asynTriggerCounter_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt32,        // asyn type 
+                                          (uint8_t*)&triggerCounter_, // pointer to data
+                                          sizeof(triggerCounter_),    // size of data
+                                          ECMC_EC_S32,           // ecmc data type
+                                          0);                    // die if fail
+
+  if(!asynTriggerCounter_) {
+    SOCKETCAN_DBG_PRINT("ERROR: Failed create asyn param for trigg counter.");   
+    throw std::runtime_error( "ERROR: Failed create asyn param for trigg counter: " + paramName);
+  }
+
+  asynTriggerCounter_->setAllowWriteToEcmc(false);
+  asynTriggerCounter_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);  
+
+  // Add trigger counter "plugin.scope%d.scantotrigg"
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + to_string(objectId_) + 
+                          "." + ECMC_PLUGIN_ASYN_SCAN_TO_TRIGG_OFFSET;
+
+  asynTimeTrigg2Sample_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamFloat64,      // asyn type 
+                                          (uint8_t*)&samplesSinceLastTrigg_, // pointer to data
+                                          sizeof(samplesSinceLastTrigg_),    // size of data
+                                          ECMC_EC_S64,           // ecmc data type
+                                          0);                    // die if fail
+
+  if(!asynTimeTrigg2Sample_) {
+    SOCKETCAN_DBG_PRINT("ERROR: Failed create asyn param for time trigg to sample.");   
+    throw std::runtime_error( "ERROR: Failed create asyn param for time trigg to sample: " + paramName);
+  }
+
+  asynTimeTrigg2Sample_->addSupportedAsynType(asynParamFloat64);
+  asynTimeTrigg2Sample_->setAllowWriteToEcmc(false);
+  asynTimeTrigg2Sample_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);  
+
+  // Add enable "plugin.scope%d.source"
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + to_string(objectId_) + 
+                          "." + ECMC_PLUGIN_ASYN_SCOPE_SOURCE;
+
+  sourceStrParam_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt8Array,    // asyn type 
+                                          (uint8_t*)cfgDataSourceStr_,// pointer to data
+                                          strlen(cfgDataSourceStr_),  // size of data
+                                          ECMC_EC_U8,            // ecmc data type
+                                          0);                    // die if fail
+
+  if(!sourceStrParam_) {
+    SOCKETCAN_DBG_PRINT("ERROR: Failed create asyn param for data source.");   
+    throw std::runtime_error( "ERROR: Failed create asyn param for data source: " + paramName);
+  }
+
+  sourceStrParam_->setAllowWriteToEcmc(false);  // read only
+  sourceStrParam_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);  
+
+  // Add enable "plugin.scope%d.trigg"
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + to_string(objectId_) + 
+                          "." + ECMC_PLUGIN_ASYN_SCOPE_TRIGG;
+
+  triggStrParam_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt8Array,    // asyn type 
+                                          (uint8_t*)cfgTriggStr_,// pointer to data
+                                          strlen(cfgTriggStr_),  // size of data
+                                          ECMC_EC_U8,            // ecmc data type
+                                          0);                    // die if fail
+
+  if(!triggStrParam_) {
+    SOCKETCAN_DBG_PRINT("ERROR: Failed create asyn param for trigger.");       
+    throw std::runtime_error( "ERROR: Failed create asyn param for trigger: " + paramName);
+  }
+
+  triggStrParam_->setAllowWriteToEcmc(false);  // read only
+  triggStrParam_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);  
+
+  // Add enable "plugin.scope%d.nexttime"
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + to_string(objectId_) + 
+                          "." + ECMC_PLUGIN_ASYN_SCOPE_NEXT_SYNC;
+
+  sourceNexttimeStrParam_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt8Array,    // asyn type 
+                                          (uint8_t*)cfgDataNexttimeStr_,// pointer to data
+                                          strlen(cfgDataNexttimeStr_),  // size of data
+                                          ECMC_EC_U8,            // ecmc data type
+                                          0);                    // die if fail
+
+  if(!sourceNexttimeStrParam_) {
+    SOCKETCAN_DBG_PRINT("ERROR: Failed create asyn param for nexttime.");       
+    throw std::runtime_error( "ERROR: Failed create asyn param for nexttime: " + paramName);
+  }
+
+  sourceNexttimeStrParam_->setAllowWriteToEcmc(false);  // read only
+  sourceNexttimeStrParam_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);
+*/
+}
+
+// Avoid issues with std:to_string()
+std::string ecmcCANOpenSDO::to_string(int value) {
+  std::ostringstream os;
+  os << value;
+  return os.str();
+}

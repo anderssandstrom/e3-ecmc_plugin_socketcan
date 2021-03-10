@@ -150,6 +150,7 @@ int ecmcCANOpenDevice::addSDO(uint32_t cobIdTx,    // 0x580 + CobId
   }
 
   sdos_[sdoCounter_] = new ecmcCANOpenSDO(writeBuffer_,
+                                         nodeId_,
                                          cobIdTx,
                                          cobIdRx,
                                          rw,

@@ -14,9 +14,6 @@
 // Needed to get headers in ecmc right...
 #define ECMC_IS_PLUGIN
 
-#define ECMC_PLUGIN_ASYN_PREFIX      "plugin.can"
-#define ECMC_PLUGIN_ASYN_ENABLE      "enable"
-
 #include <sstream>
 #include "ecmcSocketCAN.h"
 #include "ecmcPluginClient.h"

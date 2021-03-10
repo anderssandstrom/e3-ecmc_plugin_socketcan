@@ -20,6 +20,7 @@
 #include "inttypes.h"
 #include <string>
 #include "ecmcSocketCANWriteBuffer.h"
+#include "ecmcDataItem.h"
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
@@ -32,6 +33,7 @@
 class ecmcCANOpenSDO {
  public:
   ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
+                 uint32_t nodeId,
                  uint32_t cobIdTx,    // 0x580 + CobId
                  uint32_t cobIdRx,    // 0x600 + Cobid
                  ecmc_can_direction rw,
@@ -42,7 +44,7 @@ class ecmcCANOpenSDO {
                  int exeSampleTimeMs,
                  const char *name,
                  std::atomic_flag *ptrSdo1Lock,
-                 int dbgMode);                
+                 int dbgMode);
   ~ecmcCANOpenSDO();
   void execute();
   void newRxFrame(can_frame *frame);
@@ -57,7 +59,9 @@ class ecmcCANOpenSDO {
   int writeWaitForDataConfFrame(int useToggle, can_frame *frame);
   int tryLockSdo1();
   int unlockSdo1();
+  
   ecmcSocketCANWriteBuffer *writeBuffer_;
+  uint32_t nodeId_;   // with cobid
   uint32_t cobIdRx_;   // with cobid
   uint32_t cobIdTx_;   // with cobid
   int readSampleTimeMs_;
@@ -96,6 +100,12 @@ class ecmcCANOpenSDO {
   int busyCounter_;
   std::atomic_flag *ptrSdo1Lock_;
   bool busy_;
+
+  //ASYN
+  void initAsyn();
+  static std::string    to_string(int value);
+
+  ecmcAsynDataItem *dataParam_;
 };
 
 #endif  /* ECMC_CANOPEN_SDO_H_ */
