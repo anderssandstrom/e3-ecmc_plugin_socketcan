@@ -71,7 +71,7 @@ class ecmcSocketCANWriteBuffer {
                                     uint8_t data6,
                                     uint8_t data7);
   int                   addWriteCAN(can_frame *frame);
-  int                   getlastWritesError();
+  int                   getlastWritesErrorAndReset();
 
  private:
   static std::string    to_string(int value);

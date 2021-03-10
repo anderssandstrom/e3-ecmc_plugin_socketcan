@@ -241,7 +241,7 @@ int ecmcSocketCAN::getlastWritesError() {
   if(!writeBuffer_) { 
     return ECMC_CAN_ERROR_WRITE_BUFFER_NULL;
   }
-  return writeBuffer_->getlastWritesError();
+  return writeBuffer_->getlastWritesErrorAndReset();
 }
 
 int ecmcSocketCAN::addWriteCAN(uint32_t canId,
@@ -276,6 +276,12 @@ void  ecmcSocketCAN::execute() {
 
   for(int i = 0; i < deviceCounter_; i++){
     devices_[i]->execute();
+  }
+
+  int writeError=getlastWritesError();
+  if (writeError) {
+    errorCode_ = writeError;
+    refreshNeeded_ = 1;
   }
   refreshAsynParams();
   return;
