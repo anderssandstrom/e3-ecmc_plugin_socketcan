@@ -55,8 +55,8 @@ class ecmcCANOpenSDO {
   int writeDataStateMachine(can_frame *frame);
   int writeNextDataToSlave(int useToggle);
   int writeWaitForDataConfFrame(int useToggle, can_frame *frame);
-  int tryLock();
-  int tryUnlock();
+  int tryLockSdo1();
+  int unlockSdo1();
   ecmcSocketCANWriteBuffer *writeBuffer_;
   uint32_t cobIdRx_;   // with cobid
   uint32_t cobIdTx_;   // with cobid

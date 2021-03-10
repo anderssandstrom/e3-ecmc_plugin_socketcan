@@ -199,7 +199,7 @@ void ecmcCANOpenSDO::execute() {
     exeCounter_  = 0;
     busyCounter_ = 0;
     errorCode_ = ECMC_CAN_ERROR_SDO_TIMEOUT;
-    tryUnlock();
+    unlockSdo1();
   }
 
   if(exeCounter_* exeSampleTimeMs_ < readSampleTimeMs_ && rw_ == DIR_READ) { // do not risk overflow
@@ -207,7 +207,7 @@ void ecmcCANOpenSDO::execute() {
   } else { // Counter is higher, try to write
     if(rw_ == DIR_READ) {
       
-      if(!tryLock()) {
+      if(!tryLockSdo1()) {
         // wait for busy to go down
        return;
       }      
@@ -305,7 +305,7 @@ int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
           //copy complete data to dataBuffer_
           printBuffer();
         }
-        tryUnlock();
+        unlockSdo1();
         return 0;
       }
       break;
@@ -353,7 +353,7 @@ int ecmcCANOpenSDO::writeDataStateMachine(can_frame *frame) {
           printf("All data written to slave SDO.\n");
           printBuffer();          
         }
-        tryUnlock();
+        unlockSdo1();
         return 0;
       }
 
@@ -463,7 +463,7 @@ int ecmcCANOpenSDO::writeValue() {
     return ECMC_CAN_ERROR_SDO_WRITE_BUSY;
   }
 
-  if(!tryLock()) {
+  if(!tryLockSdo1()) {
     // wait for busy to go down
    return ECMC_CAN_ERROR_SDO_WRITE_BUSY;
   }
@@ -487,7 +487,7 @@ int ecmcCANOpenSDO::writeValue() {
   // State machine is now in rx frame()
 }
 
-int ecmcCANOpenSDO::tryLock() {
+int ecmcCANOpenSDO::tryLockSdo1() {
   epicsMutexLock(getLockMutex_);
   if(busy_) {
     return 0;
@@ -504,7 +504,7 @@ int ecmcCANOpenSDO::tryLock() {
   return 1;
 }
 
-int ecmcCANOpenSDO::tryUnlock() {
+int ecmcCANOpenSDO::unlockSdo1() {
   epicsMutexLock(getLockMutex_);
   if(busy_) {
     ptrSdo1Lock_->clear();
