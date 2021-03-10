@@ -75,7 +75,7 @@ class ecmcCANOpenDevice {
   ecmcCANOpenPDO *pdos_[ECMC_CAN_DEVICE_PDO_MAX_COUNT];
   ecmcCANOpenSDO *sdos_[ECMC_CAN_DEVICE_SDO_MAX_COUNT];
   bool isMaster_;
-  std::atomic_flag sdo1Busy_;
+  std::atomic_flag sdo1Lock_;
 };
 
 #endif  /* ECMC_CANOPEN_DEVICE_H_ */

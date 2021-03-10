@@ -41,6 +41,7 @@ class ecmcCANOpenSDO {
                  int readSampleTimeMs,
                  int exeSampleTimeMs,
                  const char *name,
+                 std::atomic_flag *ptrSdo1Lock,
                  int dbgMode);                
   ~ecmcCANOpenSDO();
   void execute();
@@ -54,7 +55,8 @@ class ecmcCANOpenSDO {
   int writeDataStateMachine(can_frame *frame);
   int writeNextDataToSlave(int useToggle);
   int writeWaitForDataConfFrame(int useToggle, can_frame *frame);
-
+  int tryLock();
+  int tryUnlock();
   ecmcSocketCANWriteBuffer *writeBuffer_;
   uint32_t cobIdRx_;   // with cobid
   uint32_t cobIdTx_;   // with cobid
@@ -90,9 +92,12 @@ class ecmcCANOpenSDO {
   uint32_t writtenBytes_;
   char *name_;
   epicsMutexId  dataMutex_;
+  epicsMutexId  getLockMutex_;
   int busyCounter_;
   //std::atomic_flag *ptrSdo1Busy_;
-  std::atomic_flag busy_;
+  //std::atomic_flag busy_;
+  std::atomic_flag *ptrSdo1Lock_;
+  bool busy_;
 };
 
 #endif  /* ECMC_CANOPEN_SDO_H_ */
