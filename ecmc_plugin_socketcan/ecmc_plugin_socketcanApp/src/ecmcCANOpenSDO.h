@@ -105,10 +105,12 @@ class ecmcCANOpenSDO {
   bool busy_;
   bool writePending_;
 
+  static std::string    to_string(int value);
+  
   //ASYN
   void initAsyn();
-  static std::string    to_string(int value);
-
+  void refreshAsynParams();
+  int refreshNeeded_;
   ecmcAsynDataItem *dataParam_;
   ecmcAsynDataItem *errorParam_;
 

@@ -68,7 +68,9 @@ class ecmcCANOpenPDO {
   static std::string    to_string(int value);
 
   //ASYN
-  void initAsyn();  
+  void initAsyn();
+  void refreshAsynParams();
+  int refreshNeeded_;
   ecmcAsynDataItem *dataParam_;
   ecmcAsynDataItem *errorParam_;
 };

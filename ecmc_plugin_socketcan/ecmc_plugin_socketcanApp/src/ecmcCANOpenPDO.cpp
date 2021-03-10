@@ -71,6 +71,7 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
   errorCode_          = 0;
   dataBuffer_         = new uint8_t(ODSize_);
   dbgMode_            = dbgMode;
+  refreshNeeded_      = 0;
 
   writeFrame_.can_id  = cobId_;
   writeFrame_.can_dlc = ODSize;  // data length
@@ -99,9 +100,10 @@ void ecmcCANOpenPDO::execute() {
   if(rw_ == DIR_READ) {
     if(exeCounter_* exeSampleTimeMs_ >= readTimeoutMs_) {
       errorCode_ = ECMC_CAN_ERROR_PDO_TIMEOUT;
-      if(dbgMode_) {
-        printf("ECMC_CAN_ERROR_PDO_TIMEOUT (0x%x)\n",errorCode_);
+      if(dbgMode_) {        
+        printf("ECMC_CAN_ERROR_PDO_TIMEOUT (0x%x)\n",errorCode_);        
       }
+      refreshNeeded_ = 1;
       exeCounter_ = 0;
     }
   }
@@ -115,7 +117,8 @@ void ecmcCANOpenPDO::execute() {
       exeCounter_ = 0;
     }
   }
-  return;
+  // Refresh in sync with ecmc
+  refreshAsynParams();
 }
 
 // new rx frame recived!
@@ -127,7 +130,9 @@ void ecmcCANOpenPDO::newRxFrame(can_frame *frame) {
       memset(dataBuffer_,0,ODSize_);
       memcpy(dataBuffer_, &(frame->data[0]),frame->can_dlc);
       epicsMutexUnlock(dataMutex_);
+      refreshNeeded_ = 1;
       errorCode_ = 0;
+      refreshNeeded_ = 1;
       if(dbgMode_) {
         printBuffer();
       }
@@ -170,7 +175,9 @@ int ecmcCANOpenPDO::writeValue() {
     memcpy(&(writeFrame_.data[0]), dataBuffer_ ,writeFrame_.can_dlc);
     epicsMutexUnlock(dataMutex_);
   }
-  return writeBuffer_->addWriteCAN(&writeFrame_);
+  int errorCode = writeBuffer_->addWriteCAN(&writeFrame_);
+  refreshNeeded_ = 1;
+  return errorCode;
 }
 
 void ecmcCANOpenPDO::initAsyn() {
@@ -242,6 +249,14 @@ void ecmcCANOpenPDO::initAsyn() {
   errorParam_->setAllowWriteToEcmc(false);  // need to callback here
   errorParam_->refreshParam(1); // read once into asyn param lib
   ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);
+}
+
+void ecmcCANOpenPDO::refreshAsynParams() {
+  if(refreshNeeded_) {
+    dataParam_->refreshParamRT(1); // read once into asyn param lib
+    errorParam_->refreshParamRT(1); // read once into asyn param lib
+  }
+  refreshNeeded_ = 0;
 }
 
 // Avoid issues with std:to_string()

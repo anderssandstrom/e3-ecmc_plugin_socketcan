@@ -90,7 +90,7 @@ class ecmcSocketCANWriteBuffer {
   int                   writeBusy_;
   int                   lastWriteSumError_;
   int                   bufferIdAddFrames_;
-  timespec              writePauseTime_; 
+  timespec              writePauseTime_;
 };
 
 #endif  /* ECMC_SOCKETCAN_BUFFER_WRITE_H_ */

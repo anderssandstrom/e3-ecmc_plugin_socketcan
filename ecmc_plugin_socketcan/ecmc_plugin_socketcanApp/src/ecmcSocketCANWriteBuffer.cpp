@@ -42,7 +42,6 @@ ecmcSocketCANWriteBuffer::ecmcSocketCANWriteBuffer(int socketId, int cfgDbgMode)
   destructs_         = 0;
   bufferSwitchMutex_ = epicsMutexCreate();
   lastWriteSumError_ = 0;
-  
   writePauseTime_.tv_sec  = 0;
   writePauseTime_.tv_nsec = 2e6;  // 1ms
   buffer1_.frameCounter = 0;
@@ -144,23 +143,6 @@ int ecmcSocketCANWriteBuffer::addToBuffer(can_frame *frame) {
   return 0;
 }
 
-//void ecmcSocketCANWriteBuffer::addToBuffer1(can_frame *frame) {
-//  printf("addToBuffer1\n");
-//  epicsMutexLock(bufferMutex1_);
-//  buffer1_.frame[buffer1_.frameCounter] = *frame;
-//  buffer1_.frameCounter++; 
-//  epicsMutexUnlock(bufferMutex1_);
-//}
-//
-//void ecmcSocketCANWriteBuffer::addToBuffer2(can_frame *frame) {
-//  printf("addToBuffer2\n");
-//  epicsMutexLock(bufferMutex2_);
-//  buffer2_.frame[buffer2_.frameCounter] = *frame;
-//  buffer2_.frameCounter++; 
-//  epicsMutexUnlock(bufferMutex2_);
-//}
-//
-
 int ecmcSocketCANWriteBuffer::writeBuffer() {
 
   int errorCode = 0;
@@ -177,43 +159,6 @@ int ecmcSocketCANWriteBuffer::writeBuffer() {
   bufferWrite_->frameCounter = 0;
   return lastWriteSumError_;
 }
-
-//void ecmcSocketCANWriteBuffer::writeBuffer1() {
-//  //printf("writeBuffer1\n");
-//  int errorCode = 0;
-//  epicsMutexLock(bufferMutex1_);
-//  if(buffer1_.frameCounter==0) {
-//    return;
-//  }
-//  printf("writeBuffer1\n");
-//  for(int i=0; i<buffer1_.frameCounter;i++) {
-//    errorCode = writeCAN(&buffer1_.frame[i]);
-//    if(errorCode) {
-//      lastWriteSumError_ = errorCode;
-//    }
-//  }
-//  buffer1_.frameCounter = 0;
-//  epicsMutexUnlock(bufferMutex1_);  
-//}
-//
-//void ecmcSocketCANWriteBuffer::writeBuffer2() {
-//  
-//  int errorCode = 0;
-//  epicsMutexLock(bufferMutex2_);
-//  if(buffer2_.frameCounter==0) {
-//    return;
-//  }
-//  printf("writeBuffer2\n");
-//
-//  for(int i=0; i<buffer2_.frameCounter;i++) {
-//    errorCode = writeCAN(&buffer2_.frame[i]);
-//    if(errorCode) {
-//      lastWriteSumError_ = errorCode;
-//    }
-//  }
-//  buffer2_.frameCounter = 0;
-//  epicsMutexUnlock(bufferMutex2_);
-//}
 
 int ecmcSocketCANWriteBuffer::switchBuffer() {
 

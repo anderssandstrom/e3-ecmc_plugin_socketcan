@@ -61,6 +61,8 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
   connected_      = 0;
   writeBuffer_    = NULL;
   deviceCounter_  = 0;
+  refreshNeeded_  = 0;
+  errorCode_      = 0;
   masterDev_      = NULL;
   for(int i = 0; i<ECMC_CAN_MAX_DEVICES;i++) {
     devices_[i] = NULL;
@@ -94,7 +96,7 @@ ecmcSocketCAN::ecmcSocketCAN(char* configStr,
     connectPrivate();
   }
   writeBuffer_ = new ecmcSocketCANWriteBuffer(socketId_, cfgDbgMode_);
-
+  initAsyn();
 }
 
 ecmcSocketCAN::~ecmcSocketCAN() {
@@ -194,9 +196,15 @@ void ecmcSocketCAN::doReadWorker() {
     }
 
     // Wait for new CAN frame 
-    read(socketId_, &rxmsg_, sizeof(rxmsg_));
+    int bytes = read(socketId_, &rxmsg_, sizeof(rxmsg_));
+    if(bytes == -1) {
+      errorCode_ = errno;      
+      printf("ecmcSocketCAN: read() fail with error %s.\n", strerror(errno));      
+      refreshNeeded_ = 1;
+      continue;
+    }
 
-    // forward all data to devices (also master)
+    // forward all data to devices (including master)
     for(int i = 0; i < deviceCounter_; i++){
       devices_[i]->newRxFrame(&rxmsg_);
     }
@@ -269,7 +277,7 @@ void  ecmcSocketCAN::execute() {
   for(int i = 0; i < deviceCounter_; i++){
     devices_[i]->execute();
   }
-
+  refreshAsynParams();
   return;
 }
 
@@ -394,4 +402,60 @@ void ecmcSocketCAN::addSDO(uint32_t nodeId,
   if(errorCode > 0) {
     throw std::runtime_error("AddSDO() failed.");
   }
+}
+
+void ecmcSocketCAN::initAsyn() {
+
+  ecmcAsynPortDriver *ecmcAsynPort = (ecmcAsynPortDriver *)getEcmcAsynPortDriver();
+  if(!ecmcAsynPort) {
+    printf("ERROR: ecmcAsynPort NULL.");
+    throw std::runtime_error( "ERROR: ecmcAsynPort NULL." );
+  }
+ 
+  // Add resultdata "plugin.can.read.error"
+  std::string paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".read.error");
+
+  errorParam_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt32,        // asyn type 
+                                          (uint8_t*)&errorCode_, // pointer to data
+                                          sizeof(errorCode_),    // size of data
+                                          ECMC_EC_U32,           // ecmc data type
+                                          0);                    // die if fail
+
+  if(!errorParam_) {
+    printf("ERROR: Failed create asyn param for data.");
+    throw std::runtime_error( "ERROR: Failed create asyn param for: " + paramName);
+  }
+  errorParam_->setAllowWriteToEcmc(false);  // need to callback here
+  errorParam_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);
+
+  // Add resultdata "plugin.can.read.connected"
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".read.connected");
+
+  connectedParam_ = ecmcAsynPort->addNewAvailParam(
+                                          paramName.c_str(),     // name
+                                          asynParamInt32,        // asyn type 
+                                          (uint8_t*)&connected_, // pointer to data
+                                          sizeof(connected_),    // size of data
+                                          ECMC_EC_U32,           // ecmc data type
+                                          0);                    // die if fail
+
+  if(!connectedParam_) {
+    printf("ERROR: Failed create asyn param for connected.");
+    throw std::runtime_error( "ERROR: Failed create asyn param for: " + paramName);
+  }
+  connectedParam_->setAllowWriteToEcmc(false);  // need to callback here
+  connectedParam_->refreshParam(1); // read once into asyn param lib
+  ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR); 
+}
+
+// only refresh from "execute" thread
+void ecmcSocketCAN::refreshAsynParams() {
+  if(refreshNeeded_) {
+    connectedParam_->refreshParamRT(1); // read once into asyn param lib
+    errorParam_->refreshParamRT(1); // read once into asyn param lib
+  }
+  refreshNeeded_ = 0;
 }

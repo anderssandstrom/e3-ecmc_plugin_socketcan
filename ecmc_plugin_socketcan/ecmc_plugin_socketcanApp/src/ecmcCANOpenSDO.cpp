@@ -63,6 +63,7 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   dbgMode_            = dbgMode;
   name_               = strdup(name);
   errorCode_          = 0;
+  refreshNeeded_      = 0;
   ptrSdo1Lock_        = ptrSdo1Lock;
   dataMutex_          = epicsMutexCreate();
   getLockMutex_       = epicsMutexCreate();
@@ -256,7 +257,9 @@ void ecmcCANOpenSDO::execute() {
         printf("STATE = READ_WAIT_FOR_CONF %s\n",name_);
       }
     }
-  }  
+  }
+  // Refresh in sync with ecmc
+  refreshAsynParams();
 }
 
 // new rx frame recived!
@@ -282,7 +285,7 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
   }
   if(errorCode && errorCode_ != errorCode) {
     errorCode_ = errorCode;
-    errorParam_->refreshParamRT(1);
+    refreshNeeded_ = 1;    
   }
 }
 
@@ -337,7 +340,7 @@ int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
           printf("All data read from slave SDO.\n");
           //copy complete data to dataBuffer_
           printBuffer();
-          dataParam_->refreshParamRT(1);
+          refreshNeeded_ = 1;          
         }
         unlockSdo1();
         return 0;
@@ -648,6 +651,14 @@ void ecmcCANOpenSDO::initAsyn() {
   errorParam_->refreshParam(1); // read once into asyn param lib
   ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);
 
+}
+
+void ecmcCANOpenSDO::refreshAsynParams() {
+  if(refreshNeeded_) {
+    dataParam_->refreshParamRT(1); // read once into asyn param lib
+    errorParam_->refreshParamRT(1); // read once into asyn param lib
+  }
+  refreshNeeded_ = 0;
 }
 
 // Avoid issues with std:to_string()
