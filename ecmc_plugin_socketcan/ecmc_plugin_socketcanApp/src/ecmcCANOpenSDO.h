@@ -44,6 +44,7 @@ class ecmcCANOpenSDO {
                  int exeSampleTimeMs,
                  const char *name,
                  std::atomic_flag *ptrSdo1Lock,
+                 int objIndex,
                  int dbgMode);
   ~ecmcCANOpenSDO();
   void execute();
@@ -86,8 +87,10 @@ class ecmcCANOpenSDO {
   
   int dbgMode_;
   int errorCode_;
+  int objIndex_;
+
   uint8_t *dataBuffer_;
-  uint8_t *tempReadBuffer_;
+  uint8_t *tempDataBuffer_;
   uint32_t recivedBytes_;
   int useTg1Frame_;
   ecmc_read_states readStates_;
@@ -100,12 +103,16 @@ class ecmcCANOpenSDO {
   int busyCounter_;
   std::atomic_flag *ptrSdo1Lock_;
   bool busy_;
+  bool writePending_;
 
   //ASYN
   void initAsyn();
   static std::string    to_string(int value);
 
   ecmcAsynDataItem *dataParam_;
+  ecmcAsynDataItem *errorParam_;
+
 };
+
 
 #endif  /* ECMC_CANOPEN_SDO_H_ */

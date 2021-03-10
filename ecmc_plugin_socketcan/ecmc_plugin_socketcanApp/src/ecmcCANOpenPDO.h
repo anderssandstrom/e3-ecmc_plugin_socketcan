@@ -30,6 +30,7 @@
 class ecmcCANOpenPDO {
  public:
   ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
+                 uint32_t nodeId,
                  uint32_t cobId,
                  ecmc_can_direction rw,
                  uint32_t ODSize,
@@ -48,6 +49,7 @@ class ecmcCANOpenPDO {
   int validateFrame(can_frame *frame);
   ecmcSocketCANWriteBuffer *writeBuffer_;
   uint32_t cobId_;   // with cobid
+  uint32_t nodeId_;
   int readTimeoutMs_;
   int writeCycleMs_;
   int exeSampleTimeMs_;
@@ -63,6 +65,12 @@ class ecmcCANOpenPDO {
   epicsMutexId  dataMutex_;
   char* name_;
 
+  static std::string    to_string(int value);
+
+  //ASYN
+  void initAsyn();  
+  ecmcAsynDataItem *dataParam_;
+  ecmcAsynDataItem *errorParam_;
 };
 
 #endif  /* ECMC_CANOPEN_PDO_H_ */

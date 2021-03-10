@@ -124,6 +124,7 @@ int ecmcCANOpenDevice::addPDO(uint32_t cobId,
   }
 
   pdos_[pdoCounter_] = new ecmcCANOpenPDO(writeBuffer_,
+                                         nodeId_,
                                          cobId,
                                          rw,
                                          ODSize,
@@ -161,6 +162,7 @@ int ecmcCANOpenDevice::addSDO(uint32_t cobIdTx,    // 0x580 + CobId
                                          exeSampleTimeMs_,
                                          name,
                                          &sdo1Lock_,
+                                         sdoCounter_,
                                          dbgMode_);
   sdoCounter_++;                                       
   return 0;
