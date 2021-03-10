@@ -31,6 +31,9 @@ void f_worker_write(void *obj) {
 }
 
 /** ecmc ecmcSocketCANWriteBuffer class
+ * Implements writing of can messages to a socket. 
+ * Two buffers are used. While a thread writes to socket from one of teh buffers,
+ * data can still be added to the other buffer. Then teh buffers are switched.
 */
 ecmcSocketCANWriteBuffer::ecmcSocketCANWriteBuffer(int socketId, int cfgDbgMode) {
   memset(&buffer1_.frames,0,sizeof(struct can_frame)*ECMC_CAN_MAX_WRITE_CMDS);
