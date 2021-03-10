@@ -92,11 +92,14 @@ ecmcCANOpenAddPDO("status1",3,0x183,2,8,10000,0)  # READ
 #           <readTimeoutMs>   : Readtimeout in ms.
 #
 ecmcCANOpenAddSDO("analogValues1",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
-dbLoadRecords(ecmcPluginSocketCAN_SDO.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=AI-Array,source=analogValues1,DTYP=asynInt16ArrayIn,FTVL=SHORT,NELM=28")
+dbLoadRecords(ecmcPluginSocketCAN_SDO.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=AI01-Array,source=analogValues1,DTYP=asynInt16ArrayIn,FTVL=SHORT,NELM=28")
 
 ecmcCANOpenAddSDO("analogValues2",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+dbLoadRecords(ecmcPluginSocketCAN_SDO.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=AI02-Array,source=analogValues2,DTYP=asynInt16ArrayIn,FTVL=SHORT,NELM=28")
 ecmcCANOpenAddSDO("analogValues3",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+dbLoadRecords(ecmcPluginSocketCAN_SDO.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=AI03-Array,source=analogValues3,DTYP=asynInt16ArrayIn,FTVL=SHORT,NELM=28")
 ecmcCANOpenAddSDO("analogValues4",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+dbLoadRecords(ecmcPluginSocketCAN_SDO.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=AI04-Array,source=analogValues4,DTYP=asynInt16ArrayIn,FTVL=SHORT,NELM=28")
 ecmcCANOpenAddSDO("basicConfig",3,0x583,0x603,1,0x2690,0x1,7,0)      # WRITE
 
 ##############################################################################
