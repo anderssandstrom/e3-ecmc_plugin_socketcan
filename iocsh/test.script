@@ -103,3 +103,5 @@ ecmcCANOpenAddSDO("basicConfig",3,0x583,0x603,1,0x2690,0x1,7,0)      # WRITE
 ecmcConfigOrDie "Cfg.SetAppMode(1)"
 iocInit
 dbl > pvs.log
+
+ecmcGrepParam *plugin.can.*

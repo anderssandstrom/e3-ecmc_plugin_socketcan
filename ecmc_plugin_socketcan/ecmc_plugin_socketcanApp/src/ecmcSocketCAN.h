@@ -113,7 +113,6 @@ class ecmcSocketCAN {
 
  private:
   void                  parseConfigStr(char *configStr);
-  void                  initAsyn();
   static std::string    to_string(int value);
   void                  connectPrivate();
   int                   writeCAN(can_frame *frame);
