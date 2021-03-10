@@ -83,8 +83,12 @@ ecmcCANOpenSDO::ecmcCANOpenSDO(ecmcSocketCANWriteBuffer* writeBuffer,
   readStates_         = READ_IDLE;
   writeStates_        = WRITE_IDLE;
   useTg1Frame_        = 1;
-  dataBuffer_         = new uint8_t(ODSize_);
-  tempDataBuffer_     = new uint8_t(ODSize_);
+  dataBuffer_         = new uint8_t[ODSize_];
+  tempDataBuffer_     = new uint8_t[ODSize_];
+
+  memset(dataBuffer_,0,ODSize_);
+  memset(tempDataBuffer_,0,ODSize_);
+
   busyCounter_        = 0;
   // Request data (send on slave RX)
   // w 0x603 [8] 0x40 0x40 0x26 0x00 0x00 0x00 0x00 0x00

@@ -69,7 +69,8 @@ ecmcCANOpenPDO::ecmcCANOpenPDO(ecmcSocketCANWriteBuffer* writeBuffer,
   exeCounter_         = 0;
   busy_               = 0;
   errorCode_          = 0;
-  dataBuffer_         = new uint8_t(ODSize_);
+  dataBuffer_         = new uint8_t[ODSize_];
+  memset(dataBuffer_,0,ODSize_);
   dbgMode_            = dbgMode;
   refreshNeeded_      = 0;
 
