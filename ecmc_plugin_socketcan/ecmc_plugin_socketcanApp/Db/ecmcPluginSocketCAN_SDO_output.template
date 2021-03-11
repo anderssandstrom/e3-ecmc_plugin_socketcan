@@ -1,0 +1,11 @@
+# Data source: plugin.can.dev3.sdo.analogValues4
+record(waveform,"$(P)CAN${CH_ID}-${suffix=}"){
+  info(asyn:READBACK,"1")
+  field(DESC, "SDO Data")  
+  field(DTYP, "${DTYP=asynInt8ArrayOut}")
+  field(INP,  "@asyn(${PORT},$(ADDR=0),$(TIMEOUT=1000))T_SMP_MS=$(T_SMP_MS=1000)/TYPE=${DTYP=asynInt8ArrayOut}/plugin.can.dev${DEV_ID}.sdo.${source=value}=")
+  field(FTVL, "${FTVL=CHAR}")
+  field(NELM, "${NELM=1024}")
+  field(SCAN, "Passive")
+  field(TSE,  "0")
+}

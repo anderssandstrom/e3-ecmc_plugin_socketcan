@@ -1,4 +1,4 @@
-file "ecmcPluginSocketCAN_SDO.template"
+file "ecmcPluginSocketCAN_SDO_input.template"
 {
   pattern {CH_ID, DEV_ID, NELM, suffix,      source,        DTYP,             FTVL }
           {03,    3,      28,   SDO01-Array, analogValues1, asynInt16ArrayIn, SHORT}
