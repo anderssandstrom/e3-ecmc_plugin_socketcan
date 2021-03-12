@@ -12,11 +12,7 @@ https://en.wikipedia.org/wiki/SocketCAN
 
 This module implements a few of the CANOpen functionalities (but it is far from a full CANOpen Implementation).
 
-The currect implemented features are:
-
-* SDO segmented r/w
-
-* PDO r/w
+The current implemented features are:
 
 * Simple master:
 
@@ -27,6 +23,10 @@ The currect implemented features are:
     * Sync
 
 * Simple generic (slave) device
+
+* SDO segmented r/w
+
+* PDO r/w
 
 These functionalities are configured through iocsh cmds:
 
