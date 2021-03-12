@@ -292,7 +292,7 @@ void ecmcCANOpenAddSDOPrintHelp() {
   printf("          <ODIndex>         : OD index of SDO.\n");
   printf("          <ODSubIndex>      : OD sub index of SDO.\n");
   printf("          <ODSize>          : OS Size.\n");
-  printf("          <readTimeoutMs>   : Readtimeout in ms.\n");
+  printf("          <readSampleTimeMs>: Sample time for read in ms (write is always on demand).\n");
   printf("\n");
 }
 
@@ -304,7 +304,7 @@ int ecmcCANOpenAddSDO(const char* name,
                       int ODIndex, 
                       int ODSubIndex,
                       int ODSize,
-                      int readTimeoutMs) {
+                      int readSampleTimeMs) {
   if(!name) {
     printf("Error: name.\n");
     ecmcCANOpenAddSDOPrintHelp();
@@ -352,12 +352,11 @@ int ecmcCANOpenAddSDO(const char* name,
     return asynError;
   }
 
-  if(readTimeoutMs < 0) {
-    printf("Error: invalid readTimeoutMs.\n");
+  if(readSampleTimeMs < 0) {
+    printf("Error: invalid readSampleTimeMs.\n");
     ecmcCANOpenAddSDOPrintHelp();
     return asynError;
   }
-
 
   ecmc_can_direction tempDir = DIR_READ;
   if(dir == 1) {
@@ -372,7 +371,7 @@ int ecmcCANOpenAddSDO(const char* name,
                  ODIndex,
                  ODSubIndex,
                  ODSize,
-                 readTimeoutMs,
+                 readSampleTimeMs,
                  name);
 
 
@@ -401,7 +400,7 @@ static const iocshArg initArg6_2 =
 static const iocshArg initArg7_2 =
 { "OD size", iocshArgInt };
 static const iocshArg initArg8_2 =
-{ "Read timeout ms", iocshArgInt };
+{ "Read sample time ms", iocshArgInt };
 
 static const iocshArg *const initArgs_2[]  = { &initArg0_2, 
                                                &initArg1_2,
