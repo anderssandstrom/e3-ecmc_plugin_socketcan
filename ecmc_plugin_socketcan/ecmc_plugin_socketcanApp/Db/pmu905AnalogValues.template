@@ -226,8 +226,6 @@ record(ai,"$(P)CAN${CH_ID}-AIR_INLET") {
 
 # Scaling?
 # -30..120 degC
-
-
 record(calc, "$(P)CAN${CH_ID}-AIR_OUTLET_") {
   field(DESC, "Analog Values: AIR_OUTLET_")
   field(PINI, "1")
