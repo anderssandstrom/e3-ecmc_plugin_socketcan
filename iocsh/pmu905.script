@@ -84,7 +84,7 @@ dbLoadRecords(pmu905AnalogValues.template, "P=${ECMC_PREFIX},CH_ID=03")
 
 
 ecmcCANOpenAddSDO("basicConfig",3,0x583,0x603,1,0x2690,0x1,7,0)      # WRITE
-dbLoadRecords(ecmcPluginSocketCAN_SDO_output.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=SDO02-BasicConfig,source=basicConfig,DTYP=asynInt8ArrayOut,FTVL=CHAR,NELM=7")
+dbLoadRecords(ecmcPluginSocketCAN_SDO_output.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=SDO02-BasicConfig,source=basicConfig,DTYP=asynInt8ArrayOut,FTVL=UCHAR,NELM=7")
 
 ##############################################################################
 ############# Go to realtime:
