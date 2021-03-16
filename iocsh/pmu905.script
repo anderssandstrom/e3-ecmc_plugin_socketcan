@@ -10,10 +10,10 @@ epicsEnvSet("IOC" ,"$(IOC="IOC_TEST")")
 epicsEnvSet("ECMCCFG_INIT" ,"")  #Only run startup once (auto at PSI, need call at ESS), variable set to "#" in startup.cmd
 epicsEnvSet("SCRIPTEXEC" ,"$(SCRIPTEXEC="iocshLoad")")
 
-require ecmccfg 6.3.2
+require ecmccfg 6.3.0
 
 # run module startup.cmd (only needed at ESS  PSI auto call at require)
-$(ECMCCFG_INIT)$(SCRIPTEXEC) ${ecmccfg_DIR}startup.cmd, "IOC=$(IOC),ECMC_VER=6.3.2,MASTER_ID=-1"
+$(ECMCCFG_INIT)$(SCRIPTEXEC) ${ecmccfg_DIR}startup.cmd, "IOC=$(IOC),ECMC_VER=6.3.0,MASTER_ID=-1"
 
 ##############################################################################
 ## Configure hardware:
@@ -23,7 +23,7 @@ $(ECMCCFG_INIT)$(SCRIPTEXEC) ${ecmccfg_DIR}startup.cmd, "IOC=$(IOC),ECMC_VER=6.3
 ## Load plugin:
 require ecmc_plugin_socketcan master # do not require then loaded twice..
 
-epicsEnvSet(ECMC_PLUGIN_FILNAME,"/home/dev/epics/base-7.0.4/require/${E3_REQUIRE_VERSION}/siteMods/ecmc_plugin_socketcan/master/lib/${EPICS_HOST_ARCH=linux-x86_64}/libecmc_plugin_socketcan.so")
+epicsEnvSet(ECMC_PLUGIN_FILNAME,"${HOME}/epics/base-7.0.4/require/${E3_REQUIRE_VERSION}/siteMods/ecmc_plugin_socketcan/master/lib/${EPICS_HOST_ARCH=linux-x86_64}/libecmc_plugin_socketcan.so")
 epicsEnvSet(ECMC_PLUGIN_CONFIG,"IF=can0;DBG_PRINT=1;") # Only one option implemented in this plugin
 ${SCRIPTEXEC} ${ecmccfg_DIR}loadPlugin.cmd, "PLUGIN_ID=0,FILE=${ECMC_PLUGIN_FILNAME},CONFIG='${ECMC_PLUGIN_CONFIG}', REPORT=1"
 epicsEnvUnset(ECMC_PLUGIN_FILNAME)
@@ -62,7 +62,9 @@ ecmcCANOpenAddDevice("pmu905",3)
 #           <ODSize>          : Size of PDO (max 8 bytes).
 #           <readTimeoutMs>   : Readtimeout in ms.
 #           <writeCycleMs>    : Cycle time for write (if <= 0 then only write on change).
-ecmcCANOpenAddPDO("status",3,0x183,2,8,10000,0)  # READ
+ecmcCANOpenAddPDO("status",3,0x183,2,8,100000,0)  # READ
+dbLoadRecords(ecmcPluginSocketCAN_PDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=PDO01-Array,source=status1,NELM=8")
+
 
 #     ecmcCANOpenAddSDO -h
 #        Use ecmcCANOpenAddSDO(<name>, <node id>,.....)
@@ -77,7 +79,10 @@ ecmcCANOpenAddPDO("status",3,0x183,2,8,10000,0)  # READ
 #           <readTimeoutMs>   : Readtimeout in ms.
 #
 ecmcCANOpenAddSDO("analogValues",3,0x583,0x603,2,0x2640,0x0,56,7000) # READ
+dbLoadRecords(ecmcPluginSocketCAN_SDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=SDO01-Array,source=analogValues,DTYP=asynInt16ArrayIn,FTVL=SHORT,NELM=28")
+
 ecmcCANOpenAddSDO("basicConfig",3,0x583,0x603,1,0x2690,0x1,7,0)      # WRITE
+dbLoadRecords(ecmcPluginSocketCAN_SDO_output.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=SDO02-BasicConfig,source=basicConfig,DTYP=asynInt8ArrayOut,FTVL=CHAR,NELM=7")
 
 ##############################################################################
 ############# Go to realtime:
