@@ -43,11 +43,19 @@ record(ai,"$(P)CAN${CH_ID}-V_REG") {
   field(EGU,  "mV")
 }
 
-# 0..150 degC
+# 0..150 degC. NOTE: LINR=SLOPE will not work for soft devices..
+record(calc, "$(P)CAN${CH_ID}-V_TEMP_") {
+  field(DESC, "Analog Values: V_TEMP")
+  field(PINI, "1")
+  field(CALC, "A*0.1")
+  field(INPA, "$(P)CAN03-SDO01-Array.[5] CP")
+  field(FLNK, "$(P)CAN${CH_ID}-V_TEMP.PROC")
+}
+
 record(ai,"$(P)CAN${CH_ID}-V_TEMP") {
   field(DESC, "Analog Values: V_TEMP")
   field(PINI, "1")
-  field(INP,  "$(P)CAN03-SDO01-Array.[5] CP")
+  field(INP,  "$(P)CAN${CH_ID}-V_TEMP_.VAL")
   field(LINR, "SLOPE")
   field(ESLO, "0.1")
   field(EOFF, "0")
@@ -195,12 +203,21 @@ record(ai,"$(P)CAN${CH_ID}-V_3V5") {
   field(EGU,  "mV")
 }
 
+
 # Scaling?
 # -30..120 degC
+record(calc, "$(P)CAN${CH_ID}-AIR_INLET_") {
+  field(DESC, "Analog Values: AIR_INLET_")
+  field(PINI, "1")
+  field(CALC, "A*0.1")
+  field(INPA, "$(P)CAN03-SDO01-Array.[24] CP")
+  field(FLNK, "$(P)CAN${CH_ID}-AIR_INLET.PROC")
+}
+
 record(ai,"$(P)CAN${CH_ID}-AIR_INLET") {
-  field(DESC, "Analog Values: AIR_INLET")
+  field(DESC, "Analog Values: V_TEMP")
   field(PINI, "1")
-  field(INP,  "$(P)CAN03-SDO01-Array.[24] CP")
+  field(INP,  "$(P)CAN${CH_ID}-AIR_INLET_.VAL")
   field(LINR, "SLOPE")
   field(ESLO, "0.1")
   field(EOFF, "0")
@@ -209,16 +226,25 @@ record(ai,"$(P)CAN${CH_ID}-AIR_INLET") {
 
 # Scaling?
 # -30..120 degC
-record(ai,"$(P)CAN${CH_ID}-AIR_OUTLET") {
-  field(DESC, "Analog Values: AIR_OUTLET")
+
+
+record(calc, "$(P)CAN${CH_ID}-AIR_OUTLET_") {
+  field(DESC, "Analog Values: AIR_OUTLET_")
   field(PINI, "1")
-  field(INP,  "$(P)CAN03-SDO01-Array.[25] CP")
+  field(CALC, "A*0.1")
+  field(INPA, "$(P)CAN03-SDO01-Array.[25] CP")
+  field(FLNK, "$(P)CAN${CH_ID}-AIR_OUTLET.PROC")
+}
+
+record(ai,"$(P)CAN${CH_ID}-AIR_OUTLET") {
+  field(DESC, "Analog Values: V_TEMP")
+  field(PINI, "1")
+  field(INP,  "$(P)CAN${CH_ID}-AIR_OUTLET_.VAL")
   field(LINR, "SLOPE")
   field(ESLO, "0.1")
   field(EOFF, "0")
   field(EGU,  "degC")
 }
-
 
 # Element 26 of analog values array is reserved.
 # Element 27 of analog values array is reserved.
