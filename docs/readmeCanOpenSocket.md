@@ -744,8 +744,28 @@ w 0x700 [1] 0x05
 
 # Basic configuration write  (maybe should write a 4800 (=48%) to byte 3 and 4)
  caput -a IOC_TEST:CAN03-SDO02-BasicConfig 7 0 0 0 0 0 0 
+ # or better 48000 VDC_CTRL (48%), fan stops of pmu and amplifier on is LED is not on anymore
+ caput -a IOC_TEST:CAN03-SDO02-BasicConfig 7 0 0 0 192 18 0 0
 
-# After basic configuration the r 280 will stop () this emans no basic configuration
+This will happen:
+WRITEVALUE  basicConfig
+STATE = WRITE_REQ_TRANSFER  basicConfig
+STATE = WRITE_WAIT_FOR_CONF basicConfig
+w 0x603 [8] 0x21 0x90 0x26 0x01 0x07 0x00 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_DATA basicConfig
+r 0x583 [8] 0x60 0x90 0x26 0x01 0x00 0x00 0x00 0x00
+w 0x603 [8] 0x01 0x00 0x00 0x00 0xC0 0x12 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_IDLE  basicConfig
+All data written to slave SDO.
+
+# Amplifier on is bit 0 of byte 0, so to power on just execute:
+caput -a IOC_TEST:CAN03-SDO02-BasicConfig 7 1 0 0 192 18 0 0
+
+
+
+# After basic configuration the r 280 will stop () this means the pmu now have basic configuration
 r 0x583 [8] 0x11 0x00 0xC5 0x00 0x00 0x00 0x88 0x13
 r 0x703 [1] 0x05
 w 0x7E5 [0]
@@ -761,3 +781,65 @@ w 0x700 [1] 0x05
 w 0x7E5 [0]
 w 0x080 [0]
 w 0x700 [1] 0x05
+
+
+# Some commands
+IOC_TEST:CAN03-PowerOnCmd
+IOC_TEST:CAN03-VrefPwrCmd
+IOC_TEST:CAN03-VdcCtrlCmd
+
+## Turn amplifier on
+caput IOC_TEST:CAN03-PowerOnCmd 1
+
+WRITEVALUE  basicConfig
+STATE = WRITE_REQ_TRANSFER  basicConfig
+STATE = WRITE_WAIT_FOR_CONF basicConfig
+w 0x603 [8] 0x21 0x90 0x26 0x01 0x07 0x00 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_DATA basicConfig
+r 0x583 [8] 0x60 0x90 0x26 0x01 0x00 0x00 0x00 0x00
+w 0x603 [8] 0x01 0x01 0x00 0x00 0x00 0x00 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_IDLE  basicConfig
+All data written to slave SDO.
+data[00]: 1
+data[01]: 0
+data[02]: 0
+data[03]: 0
+
+
+## Set VrefOwr to 100
+caput IOC_TEST:CAN03-VrefPwrCmd 100
+
+NOT WORKING.. Will get the below???
+
+r 0x583 [8] 0x11 0x00 0xC5 0x00 0x00 0x00 0x88 0x13
+WRITEVALUE  basicConfig
+STATE = WRITE_REQ_TRANSFER  basicConfig
+STATE = WRITE_WAIT_FOR_CONF basicConfig
+w 0x603 [8] 0x21 0x90 0x26 0x01 0x07 0x00 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_DATA basicConfig
+r 0x583 [8] 0x60 0x90 0x26 0x01 0x00 0x00 0x00 0x00
+w 0x603 [8] 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_IDLE  basicConfig
+All data written to slave SDO.
+
+## Set VdcCtrlCmd to 5000
+caput IOC_TEST:CAN03-VdcCtrlCmd 5000
+
+NOT WORKING.. Will get the below???
+
+WRITEVALUE  basicConfig
+STATE = WRITE_REQ_TRANSFER  basicConfig
+STATE = WRITE_WAIT_FOR_CONF basicConfig
+w 0x603 [8] 0x21 0x90 0x26 0x01 0x07 0x00 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_DATA basicConfig
+r 0x583 [8] 0x60 0x90 0x26 0x01 0x00 0x00 0x00 0x00
+w 0x603 [8] 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+writeDataStateMachine basicConfig
+STATE = WRITE_IDLE  basicConfig
+All data written to slave SDO.
+
