@@ -63,7 +63,7 @@ ecmcCANOpenAddDevice("pmu905",3)
 #           <readTimeoutMs>   : Readtimeout in ms.
 #           <writeCycleMs>    : Cycle time for write (if <= 0 then only write on change).
 ecmcCANOpenAddPDO("status",3,0x183,2,8,100000,0)  # READ
-dbLoadRecords(ecmcPluginSocketCAN_PDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=PDO01-Array,source=status1,NELM=8")
+dbLoadRecords(ecmcPluginSocketCAN_PDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=PDO01-Array,source=status,NELM=8")
 
 
 #     ecmcCANOpenAddSDO -h
