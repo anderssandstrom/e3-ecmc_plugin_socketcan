@@ -1,0 +1,13 @@
+
+
+record(acalcout,"$(P)LeftMoveData_"){
+  field(DESC, "Move data from EL3702 to EL4732")  
+  field(INAA, "$(P)ec$(MASTER_ID)-s$(SLAVE_AI)-EL3702_s$(NELM)-AI1-Array.VAL")  
+  field(INPA, "$(P)LeftGain.VAL")
+  field(INPB, "$(P)LeftOffset.VAL")
+  field(INPC, "$(P)Volume.VAL")
+  field(CALC, "(C/200*A/100*AA+(B*3276.8))")
+  field(OUT,  "$(P)ec$(MASTER_ID)-s$(SLAVE_AO)-EL4732_s$(NELM)-AO1-Array.VAL")
+  field(FLNK, "$(P)ec$(MASTER_ID)-s$(SLAVE_AO)-EL4732_s$(NELM)-AO1-Array.PROC")
+  field(NELM, "$(NELM)")  
+}
