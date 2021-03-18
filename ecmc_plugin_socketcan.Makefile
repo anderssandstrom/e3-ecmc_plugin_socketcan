@@ -57,7 +57,7 @@ SOURCES += $(APPSRC)/ecmcCANOpenSDO.cpp
 SOURCES += $(APPSRC)/ecmcCANOpenPDO.cpp
 SOURCES += $(APPSRC)/ecmcCANOpenDevice.cpp
 SOURCES += $(APPSRC)/ecmcCANOpenMaster.cpp
-SOURCES += $(APPSRC)/ecmcWriteArrayUint8Elements.cpp
+SOURCES += $(APPSRC)/ecmcByteToArrayAsub.cpp
 
 DBDS    += $(APPSRC)/ecmcSocketCAN.dbd
 

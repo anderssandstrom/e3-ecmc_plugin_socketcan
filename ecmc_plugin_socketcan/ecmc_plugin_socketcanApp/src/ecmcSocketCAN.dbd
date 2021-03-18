@@ -1,4 +1,3 @@
 registrar("ecmcCANPluginDriverRegister")
-function(ecmcWriteArrayUint8ElementsInit)
-function(ecmcWriteArrayUint8Elements)
-
+function(ecmcByteToArrayInit)
+function(ecmcByteToArray)
