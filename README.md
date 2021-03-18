@@ -176,6 +176,51 @@ Plugin info:
       func       = @0x7fb36b81d2c0
   Plc constants:
 ``` 
+# ecmcByteToArray Asub record
+This module implements an asub record that can merge bytes into an array (waveform)
+
+Usage:
+1. Link bytes to inputs A..S.
+
+2. Link array to VALA.
+
+3. Set size of output in NOVA. This also defines how many inputs will be used.
+
+ Note: Max 18 bytes (input A..S) will be merged into the array.
+
+
+EPICS database example of 7 bytes merged intio an array:
+``` 
+record(aSub,   "$(P)CAN${CH_ID}-BasicConfigPackArray_") {
+  field(INAM,  "ecmcByteToArrayInit")
+  field(SNAM,  "ecmcByteToArray")
+  field(FTA,   "UCHAR")
+  field(NOA,   "1")
+  field(INPA,  "$(P)CAN${CH_ID}-BasicConfigB0_.VAL")    # Byte 0
+  field(FTB,   "UCHAR")
+  field(NOB,   "1")
+  field(INPB,  "$(P)CAN${CH_ID}-VrefPwrCmdCalcB1_.VAL") # Byte 1
+  field(FTC,   "UCHAR")
+  field(NOC,   "1")
+  field(INPC,  "$(P)CAN${CH_ID}-VrefPwrCmdCalcB2_.VAL") # Byte 2
+  field(FTD,   "UCHAR")
+  field(NOD,   "1")
+  field(INPD,  "$(P)CAN${CH_ID}-VdcCtrlCmdCalcB3_.VAL") # Byte 3
+  field(FTE,   "UCHAR")
+  field(NOE,   "1")
+  field(INPE,  "$(P)CAN${CH_ID}-VdcCtrlCmdCalcB4_.VAL") # Byte 4
+  field(FTF,   "UCHAR")
+  field(NOF,   "1")
+  field(INPF,  "0")                                     # Byte 5
+  field(FTG,   "UCHAR")
+  field(NOG,   "1")
+  field(INPG,  "0")                                     # Byte 6
+  field(FTVA,  "UCHAR")
+  field(OUTA,  "$(P)CAN${CH_ID}-SDO02-BasicConfig")
+  field(NOVA,  "7")                                     # 7 bytes (0..6 corresponds to input A..G)
+  field(FLNK,  "$(P)CAN${CH_ID}-SDO02-BasicConfig.PROC") # Send the data
+}
+``` 
 
 # Testing
 You can use a virtual can, vcan network for testing:
@@ -206,3 +251,4 @@ In future it could be an option to use one of these repos for the CANOpen suppor
 1. https://github.com/CANopenNode/CANopenNode
 2. https://github.com/CANopenNode/CANopenSocket
 3. https://github.com/marel-keytech/openCANopen
+
