@@ -344,8 +344,8 @@ int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
           printf("All data read from slave SDO.\n");
           //copy complete data to dataBuffer_
           printBuffer();
-          refreshNeeded_ = 1;          
         }
+        refreshNeeded_ = 1;
         unlockSdo1();
         return 0;
       }
