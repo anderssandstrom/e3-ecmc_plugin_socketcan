@@ -10,7 +10,7 @@ Check support before install of driver:
 sudo cat /boot/config-3.10.0-1127.el7.x86_64  | grep KVASER
 CONFIG_CAN_KVASER_PCI=m
 CONFIG_CAN_KVASER_USB=m
-
+``` 
 
 Seems support for KVASER_USB already without installing.
 
