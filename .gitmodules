@@ -1,9 +1,0 @@
-[submodule "ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/CANopenNode"]
-	path = ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/CANopenNode
-	url = https://github.com/anderssandstrom/CANopenNode.git
-[submodule "ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/CANopenSocket"]
-	path = ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/CANopenSocket
-	url = https://github.com/anderssandstrom/CANopenSocket
-[submodule "ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/openCANopen"]
-	path = ecmc_plugin_socketcan/ecmc_plugin_socketcanApp/src/openCANopen
-	url = https://github.com/marel-keytech/openCANopen
