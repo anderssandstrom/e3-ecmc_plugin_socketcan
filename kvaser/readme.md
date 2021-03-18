@@ -22,7 +22,7 @@ cd socketcan_kvaser_drivers/
 ``` 
 Note: Non patched source downladed from kvaser will not work with kernel 3.10. So use the source in kvaser dir of this repo. 
 
-## 3 make 
+#### make 
 Read the README file in kvaser driver.
 These commands are from that README:
 ```
@@ -31,26 +31,23 @@ $ make
 $ sudo make install
 ```
 
-## Try start services and conf if
+## Try start services and configure interface
 
 Start services:
 ```
 $ sudo modprobe can_dev
 $ sudo modprobe can
 $ sudo modprobe can_raw
-$ sudo modprobe kvaser_usb                        #not sure if needed
-$ sudo ip link set can0 type can bitrate 125000
+$ sudo modprobe kvaser_usb                        # not sure if needed
+$ sudo ip link set can0 type can bitrate 125000.  # 125000 is bitrate (works for pmu905)
 $ sudo ip link set up can0
 ``` 
 Now you should see the can0 interface, test with "ip addr"
 
 
 
-s
-
-# OBSOLETE COMMENTS BELOW:
-
-# 1. First test without install of driver and without kvaser leaf connected.
+# OBSOLETE NOTES BELOW:
+#### 1. First test without install of driver and without kvaser leaf connected.
 
 Check support before install of driver:
 
@@ -82,7 +79,7 @@ ip addr
 ``` 
 Seems no can interface (and it's not connected).
 
-# 2. Connect kvaser leaf:
+#### 2. Connect kvaser leaf:
 
 Check ip addr:
 ``` 
@@ -114,9 +111,9 @@ dmesg:[  543.068096] usb 2-4: new high-speed USB device number 4 using xhci_hcd
 ``` 
 
 
-# 3. Try start services and conf if
+#### 3. Try start services and conf if
 
-## Services
+###### Services
 Start services:
 ```
 $ sudo modprobe can_dev
@@ -129,11 +126,11 @@ Conclusion:
 Cannot find can0.. Need to install kvaser driver..
 
 
-# Insall kvaser socketcan 3.10
+#### Insall kvaser socketcan 3.10
 
-## 1 unplug kvaser leaf
+##### 1 unplug kvaser leaf
 
-## 2 untar driver source
+##### 2 untar driver source
 ```
 cd kvaser
 tar -xvf socketcan_kvaser_drivers_for_3.10.tar 
@@ -142,7 +139,7 @@ cd socketcan_kvaser_drivers/
 
 NOTE: The socketcan_kvaser_drivers_for_3.10.tar  was recived on request from kvaser support. Their normal socketcan driver will not support kernel 3.10.
 
-## 3 make 
+##### 3 make 
 Read the README file in kvaser driver.
 These commands are from that README:
 ```
@@ -163,7 +160,7 @@ sudo yum update
 ``` 
 Now the kernel sources are at the corerct location. patched version of new socketcan version builds and seems to work with candump and connected pmu905
 
-# THIS IS A SIDE NOTE for PEAK usb CAN interface !!!
+#### THIS IS A SIDE NOTE for PEAK usb CAN interface !!!
 
 Check if support for PEAK USB
 ``` 
