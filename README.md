@@ -235,7 +235,7 @@ Install can utils:
    $ make install
 ``` 
 
-## vccn setup
+## vcan setup
  Start virt can 0 (vcan0) and candump:
  ``` 
    $ sudo modprobe vcan
