@@ -221,7 +221,7 @@ void ecmcCANOpenSDO::execute() {
   
   if(busyCounter_>ECMC_SDO_REPLY_TIMOUT_MS) {
     // cancel read or write
-    printf("SDO BUSY timeout!! %s\n",name_);
+    printf("Error: SDO BUSY timeout!! %s\n",name_);
     memset(tempDataBuffer_,0,ODSize_);
     readStates_ = READ_IDLE;
     writeStates_ = WRITE_IDLE;
@@ -358,7 +358,7 @@ int ecmcCANOpenSDO::readDataStateMachine(can_frame *frame) {
 }
 
 int ecmcCANOpenSDO::writeDataStateMachine(can_frame *frame) {
-  printf("writeDataStateMachine %s\n",name_);
+  //printf("writeDataStateMachine %s\n",name_);
   int bytes = 0;
   switch(writeStates_) {
     case WRITE_WAIT_FOR_CONF:
@@ -499,7 +499,7 @@ void ecmcCANOpenSDO::setValue(uint8_t *data, size_t bytes) {
 
 int ecmcCANOpenSDO::writeValue() {
   // Busy right now!
-  printf("WRITEVALUE  %s\n",name_);
+  //printf("WRITEVALUE  %s\n",name_);
   
   if(busy_) {
     writePending_ = true;
