@@ -1,10 +1,10 @@
-# Use kvaser
+# Use Kvaser leaf light v2
 
 ## Kernel 3.10
 
 ### Pre reqs
 
-Insatll kernel headers
+Install kernel headers
 ```
 sudo yum install kernel-devel
 ```
@@ -15,6 +15,7 @@ Note: make sure that correct kernel headers are installed for the current kernel
 #### Use the correct source
 Goto kvasser dir and untar the file: socketcan_kvaser_drivers_patch_asm_3.10.tar.gz
 
+NOTE: This source will only work for Kvaser leaf light v2 usb. It will not work for Kvaser Hydra.
 ``` 
 cd kvaser
 tar -xvf socketcan_kvaser_drivers_patch_asm_3.10.tar.gz 
