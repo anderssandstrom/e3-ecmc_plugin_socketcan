@@ -1,3 +1,21 @@
+/*************************************************************************\
+* Copyright (c) 2019 European Spallation Source ERIC
+* ecmc is distributed subject to a Software License Agreement found
+* in file LICENSE that is included with this distribution. 
+*
+*  ecmcByteToArrayAsub.cpp
+*
+*  Created on: Mar 18, 2021
+*      Author: anderssandstrom
+*
+* Usage:
+*  1. Link bytes to inputs A..S.
+*  2. Link array to VALA.
+*  3. Set size of output in NOVA. This also defines how many inputs will be used.
+* Note: Max 18 bytes (input A..S) will be merged into the array.
+*
+\*************************************************************************/
+
 // aSub, EPICS related headers
 #include <aSubRecord.h>
 #include <registryFunction.h>
@@ -18,17 +36,18 @@ epicsRegisterFunction(ecmcByteToArray);
 
 // init (INAM)
 static long ecmcByteToArrayInit(struct aSubRecord *rec){
+  epicsUInt8 byteCount=(epicsUInt8)rec->nova;
   std::cout << "ecmcByteToArrayInit aSubRecord: "<< rec->name << std::endl;
-  printf("ecmcByteToArray aSubRecord: %d\n",rec->noa);  
+  printf("ecmcByteToArray: Bytes to me merged %d\n",(int)byteCount);
   return 0;
 }
 
 static long ecmcByteToArray(struct aSubRecord *rec){
-   printf("EXECUTING!!!!!\n");
-
   // input A must be size of output array
+  
   epicsUInt8 byteCount=(epicsUInt8)rec->nova;
   
+  //printf("ecmcByteToArray: Meging %d bytes to an array.\n",(int)byteCount);
   // Max 18 byte in a row
   if(byteCount <=0 || byteCount>18){
     printf("WARNING: Only 18 first bytes will be transferred to output.\n");    
