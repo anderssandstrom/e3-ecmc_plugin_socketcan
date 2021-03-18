@@ -2,6 +2,54 @@
 
 ## Kernel 3.10
 
+### Pre reqs
+
+Insatll kernel headers
+```
+sudo yum install kernel-devel
+```
+Note: make sure that correct kernel headers are installed for the current kernel, otheerwise maybe a update is needed.
+
+### Install kvaser driver
+
+#### Use the correct source
+Goto kvasser dir and untar the file: socketcan_kvaser_drivers_patch_asm_3.10.tar.gz
+
+``` 
+cd kvaser
+tar -xvf socketcan_kvaser_drivers_patch_asm_3.10.tar.gz 
+cd socketcan_kvaser_drivers/
+``` 
+Note: Non patched source downladed from kvaser will not work with kernel 3.10. So use the source in kvaser dir of this repo. 
+
+## 3 make 
+Read the README file in kvaser driver.
+These commands are from that README:
+```
+$ sudo make uninstall
+$ make
+$ sudo make install
+```
+
+## Try start services and conf if
+
+Start services:
+```
+$ sudo modprobe can_dev
+$ sudo modprobe can
+$ sudo modprobe can_raw
+$ sudo modprobe kvaser_usb                        #not sure if needed
+$ sudo ip link set can0 type can bitrate 125000
+$ sudo ip link set up can0
+``` 
+Now you should see the can0 interface, test with "ip addr"
+
+
+
+s
+
+# OBSOLETE COMMENTS BELOW:
+
 # 1. First test without install of driver and without kvaser leaf connected.
 
 Check support before install of driver:
@@ -104,18 +152,16 @@ $ sudo make install
 ```
 
 Fails at make...
-Seems the paths are worng for a centos system..
-Need to look into makefile
-/home/anderssandstrom/sources/e3-ecmc_plugin_socketcan/kvaser/socketcan_kvaser_drivers
-
 
 sudo  yum install kernel-devel
-The sources are at the wrong place.. Sources for wrong kernel..
+The kernel sources are at the wrong place.. Sources for wrong kernel!!
 
+Need to update
 
-
-/lib/modules/3.10.0-1127.el7.x86_64/build 
-
+``` 
+sudo yum update
+``` 
+Now the kernel sources are at the corerct location. patched version of new socketcan version builds and seems to work with candump and connected pmu905
 
 # THIS IS A SIDE NOTE for PEAK usb CAN interface !!!
 
