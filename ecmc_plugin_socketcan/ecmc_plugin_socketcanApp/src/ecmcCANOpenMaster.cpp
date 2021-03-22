@@ -31,6 +31,7 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
                                      nodeId,  // 0x580 + CobId
                                      exeSampleTimeMs,
                                      name,
+                                     0,  //NMT timeout is 0 for master (always OP)
                                      dbgMode) {
   lssPdo_            = NULL;
   syncPdo_           = NULL;

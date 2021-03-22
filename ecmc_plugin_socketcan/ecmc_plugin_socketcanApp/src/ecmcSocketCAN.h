@@ -89,7 +89,8 @@ class ecmcSocketCAN {
                                   int heartSampleTimeMs);
 
   void                  addDevice(uint32_t nodeId,
-                                  const char* name);
+                                  const char* name,
+                                  int heartTimeoutMs);
 
   void                  addPDO(uint32_t nodeId,
                                uint32_t cobId,

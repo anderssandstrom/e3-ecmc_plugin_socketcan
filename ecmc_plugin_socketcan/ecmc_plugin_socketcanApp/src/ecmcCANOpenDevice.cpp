@@ -25,6 +25,7 @@ ecmcCANOpenDevice::ecmcCANOpenDevice(ecmcSocketCANWriteBuffer* writeBuffer,
                                      uint32_t nodeId,  // 0x580 + CobId
                                      int exeSampleTimeMs,
                                      const char* name,
+                                     int heartTimeoutMs,
                                      int dbgMode) {
 
   writeBuffer_        = writeBuffer;
@@ -32,12 +33,14 @@ ecmcCANOpenDevice::ecmcCANOpenDevice(ecmcSocketCANWriteBuffer* writeBuffer,
   exeSampleTimeMs_    = exeSampleTimeMs;
   exeCounter_         = 0;
   errorCode_          = 0;
+  heartTimeoutMs_     = heartTimeoutMs;
   dbgMode_            = dbgMode;
   name_               = strdup(name);
   isMaster_           = false;  
   nmtState_           = NMT_NOT_VALID;
   nmtStateOld_        = NMT_NOT_VALID;
   nmtActParam_        = NULL;
+  heartBeatCounter_   = 0;
   pdoCounter_ = 0;
   sdoCounter_ = 0;
   sdo1Lock_.test_and_set();   // make sure only one sdo is accessing the bus at the same time
@@ -64,8 +67,7 @@ ecmcCANOpenDevice::~ecmcCANOpenDevice() {
 
 void ecmcCANOpenDevice::execute() {
   
-  exeCounter_++;
-
+  exeCounter_++;  
   for(int i=0 ; i<pdoCounter_; i++) {
     if(pdos_[i]) {
       pdos_[i]->execute();
@@ -76,6 +78,16 @@ void ecmcCANOpenDevice::execute() {
     if(sdos_[i]) {
       sdos_[i]->execute();
     }
+  }
+  
+  // NMT hearbeat timout
+  if (heartBeatCounter_ * exeSampleTimeMs_ >= heartTimeoutMs_) {
+    nmtStateOld_ = nmtState_;
+    nmtState_ = NMT_NOT_VALID;
+    nmtActParam_->refreshParam(1);
+  }
+  else {
+    heartBeatCounter_ ++;
   }
 
   return;
@@ -125,6 +137,7 @@ int ecmcCANOpenDevice::validateFrame(can_frame *frame) {
 }
 
 int ecmcCANOpenDevice::checkNMT(can_frame *frame) {
+
   // check if NMT frame
   if(frame->can_id == (ECMC_CANOPEN_NMT_BASE + nodeId_)) {
     if(frame->can_dlc == 1){
@@ -146,11 +159,13 @@ int ecmcCANOpenDevice::checkNMT(can_frame *frame) {
           break;
       }
     }
+    heartBeatCounter_ = 0;
     if(nmtState_ != nmtStateOld_) {
       nmtActParam_->refreshParam(1);
     }
-    nmtState_ = nmtStateOld_;
+    nmtStateOld_ = nmtState_;    
   }
+
   return 0;
 }
 

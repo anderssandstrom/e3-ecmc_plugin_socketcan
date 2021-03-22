@@ -41,6 +41,7 @@ class ecmcCANOpenDevice {
                     uint32_t nodeId,
                     int exeSampleTimeMs,
                     const char* name,
+                    int heartTimeoutMs,
                     int dbgMode);
   virtual ~ecmcCANOpenDevice();
   void execute();
@@ -74,6 +75,8 @@ class ecmcCANOpenDevice {
   int pdoCounter_;
   int sdoCounter_;
   char* name_;
+  int heartTimeoutMs_;
+  int heartBeatCounter_;
   ecmcCANOpenPDO *pdos_[ECMC_CAN_DEVICE_PDO_MAX_COUNT];
   ecmcCANOpenSDO *sdos_[ECMC_CAN_DEVICE_SDO_MAX_COUNT];
   bool isMaster_;

@@ -153,11 +153,11 @@ void deleteSocketCAN() {
 void ecmcCANOpenAddMasterPrintHelp() {
   printf("\n");
   printf("       Use ecmcCANOpenAddMaster(<name>, <node id>,....)\n");
-  printf("          <name>                     : Name of master device.\n");
-  printf("          <node id>                  : CANOpen node id of master.\n");
-  printf("          <LSS sample time ms>       : Sample time for LSS.\n");
-  printf("          <Sync sample time ms>      : Sample time for SYNC.\n");
-  printf("          <Heartbeat sample time ms> : Sample time for Heartbeat.\n");
+  printf("          <name>                         : Name of master device.\n");
+  printf("          <node id>                      : CANOpen node id of master.\n");
+  printf("          <LSS sample time ms>           : Sample time for LSS.\n");
+  printf("          <Sync sample time ms>          : Sample time for SYNC.\n");
+  printf("          <NMT Heartbeat sample time ms> : Sample time for NMT Heartbeat.\n");
   printf("\n");
 }
 
@@ -207,7 +207,7 @@ static const iocshArg initArg2_0 =
 static const iocshArg initArg3_0 =
 { "Sync sample time ms", iocshArgInt };
 static const iocshArg initArg4_0 =
-{ "Heart sample time ms", iocshArgInt };
+{ "NMT Heart sample time ms", iocshArgInt };
 
 static const iocshArg *const initArgs_0[]  = { &initArg0_0, 
                                                &initArg1_0,
@@ -231,12 +231,13 @@ static void initCallFunc_0(const iocshArgBuf *args) {
 void ecmcCANOpenAddDevicePrintHelp() {
   printf("\n");
   printf("       Use ecmcCANOpenAddDevice(<name>, <node id>)\n");
-  printf("          <name>      : Name of device.\n");
-  printf("          <node id>   : CANOpen node id of device.\n");
+  printf("          <name>                     : Name of device.\n");
+  printf("          <node id>                  : CANOpen node id of device.\n");
+  printf("          <NMT Heartbeat timeout ms> : Timeout for NMT Heartbeat.\n");
   printf("\n");
 }
 
-int ecmcCANOpenAddDevice(const char* name, int nodeId) {
+int ecmcCANOpenAddDevice(const char* name, int nodeId,int heartTimeOutMs) {
   if(!name) {
     printf("Error: name.\n");
     ecmcCANOpenAddDevicePrintHelp();
@@ -253,8 +254,13 @@ int ecmcCANOpenAddDevice(const char* name, int nodeId) {
     return asynError;
   }
 
+  if(heartTimeOutMs < 0) {
+    printf("Invalid NMT heartbeat timeout.\n");
+    return asynError;
+  }
+
   try {
-    can->addDevice((uint32_t)nodeId,name);
+    can->addDevice((uint32_t)nodeId,name,heartTimeOutMs);
   }
   catch(std::exception& e) {
     printf("Exception: %s. Add device failed.\n",e.what());
@@ -268,13 +274,16 @@ static const iocshArg initArg0_1 =
 { "Name", iocshArgString };
 static const iocshArg initArg1_1 =
 { "Node Id", iocshArgInt };
+static const iocshArg initArg2_1 =
+{ "NMT Heart timeout ms", iocshArgInt };
 
 static const iocshArg *const initArgs_1[]  = { &initArg0_1, 
-                                               &initArg1_1};
+                                               &initArg1_1,
+                                               &initArg2_1};
 
-static const iocshFuncDef    initFuncDef_1 = { "ecmcCANOpenAddDevice", 2, initArgs_1 };
+static const iocshFuncDef    initFuncDef_1 = { "ecmcCANOpenAddDevice", 3, initArgs_1 };
 static void initCallFunc_1(const iocshArgBuf *args) {
-  ecmcCANOpenAddDevice(args[0].sval, args[1].ival);
+  ecmcCANOpenAddDevice(args[0].sval, args[1].ival, args[2].ival);
 }
 
 /** 

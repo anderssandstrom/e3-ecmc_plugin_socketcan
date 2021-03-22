@@ -336,7 +336,8 @@ void ecmcSocketCAN::addMaster(uint32_t nodeId,
 }
 
 void ecmcSocketCAN::addDevice(uint32_t nodeId,
-                              const char* name){
+                              const char* name,
+                              int heartTimeoutMs){
   if(deviceCounter_ >= ECMC_CAN_MAX_DEVICES) {
     throw std::out_of_range("Device array full.");
   }
@@ -344,7 +345,7 @@ void ecmcSocketCAN::addDevice(uint32_t nodeId,
     throw std::out_of_range("Node id out of range.");
   }
 
-  devices_[deviceCounter_] = new ecmcCANOpenDevice(writeBuffer_,nodeId,exeSampleTimeMs_,name, cfgDbgMode_);  
+  devices_[deviceCounter_] = new ecmcCANOpenDevice(writeBuffer_,nodeId,exeSampleTimeMs_,name,heartTimeoutMs,cfgDbgMode_);  
   deviceCounter_++;
 }
 
