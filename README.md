@@ -65,13 +65,14 @@ Issueing "ecmcCANOpenAddDevice -h" in the iocsh you will get the following help 
 ``` 
     ecmcCANOpenAddDevice -h
       Use ecmcCANOpenAddDevice(<name>, <node id>)
-          <name>      : Name of device.
-          <node id>   : CANOpen node id of device.
+          <name>                     : Name of device.
+          <node id>                  : CANOpen node id of device.
+          <NMT Heartbeat timeout ms> : Timeout for NMT Heartbeat.\n")
 
 ``` 
-Example to add a device with node id 3:
+Example to add a device with node id 3 and a NMT heartbeat timeout of 3s:
 ``` 
-ecmcCANOpenAddDevice("testDevice",3)
+ecmcCANOpenAddDevice("testDevice",3,3000)
 ``` 
 
 Note:: You can only use the below commands (ecmcCANOpenAddSDO and ecmcCANOpenAddODO) to nodes of an existing device or master.
