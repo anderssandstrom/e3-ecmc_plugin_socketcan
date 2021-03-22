@@ -39,8 +39,8 @@ Start services:
 $ sudo modprobe can_dev
 $ sudo modprobe can
 $ sudo modprobe can_raw
-$ sudo modprobe kvaser_usb                        # not sure if needed
-$ sudo ip link set can0 type can bitrate 125000.  # 125000 is bitrate (works for pmu905)
+#$ sudo modprobe kvaser_usb                        # not  needed, will start as soon as pluggen in
+$ sudo ip link set can0 type can bitrate 125000   # 125000 is bitrate (works for pmu905)
 $ sudo ip link set up can0
 ``` 
 Now you should see the can0 interface, test with "ip addr"
