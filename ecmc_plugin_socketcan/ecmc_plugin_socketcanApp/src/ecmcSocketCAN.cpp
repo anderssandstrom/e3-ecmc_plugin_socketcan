@@ -194,7 +194,13 @@ void ecmcSocketCAN::doReadWorker() {
     if(destructs_) {
       break;
     }
-
+    if(!connected_) {
+      timespec tempPauseTime;
+      tempPauseTime.tv_sec  = 1;
+      tempPauseTime.tv_nsec = 0;
+      nanosleep(&tempPauseTime,NULL);    
+      continue;
+    }
     // Wait for new CAN frame 
     int bytes = read(socketId_, &rxmsg_, sizeof(rxmsg_));
     if(bytes == -1) {
@@ -420,7 +426,7 @@ void ecmcSocketCAN::initAsyn() {
   }
  
   // Add resultdata "plugin.can.read.error"
-  std::string paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".read.error");
+  std::string paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".com.error");
 
   errorParam_ = ecmcAsynPort->addNewAvailParam(
                                           paramName.c_str(),     // name

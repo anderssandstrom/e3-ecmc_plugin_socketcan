@@ -46,7 +46,7 @@ ecmcSocketCANWriteBuffer::ecmcSocketCANWriteBuffer(int socketId, int cfgDbgMode)
   bufferSwitchMutex_ = epicsMutexCreate();
   lastWriteSumError_ = 0;
   writePauseTime_.tv_sec  = 0;
-  writePauseTime_.tv_nsec = 2e6;  // 1ms
+  writePauseTime_.tv_nsec = 2e6;  // 2ms
   buffer1_.frameCounter = 0;
   buffer2_.frameCounter = 0;
 
