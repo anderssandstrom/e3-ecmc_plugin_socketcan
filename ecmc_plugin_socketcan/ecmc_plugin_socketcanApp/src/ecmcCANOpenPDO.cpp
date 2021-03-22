@@ -232,7 +232,7 @@ void ecmcCANOpenPDO::initAsyn() {
 
   // Add resultdata "plugin.can.dev%d.error"
   paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".dev") + 
-              to_string(nodeId_) + ".sdo" /*+ to_string(objIndex_)*/ + std::string(".error");
+              to_string(nodeId_) + ".pdo" + "." + std::string(name_) + std::string(".error");
 
   errorParam_ = ecmcAsynPort->addNewAvailParam(
                                           paramName.c_str(),     // name

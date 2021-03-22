@@ -445,7 +445,7 @@ void ecmcSocketCAN::initAsyn() {
   ecmcAsynPort->callParamCallbacks(ECMC_ASYN_DEFAULT_LIST, ECMC_ASYN_DEFAULT_ADDR);
 
   // Add resultdata "plugin.can.read.connected"
-  paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".read.connected");
+  paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".com.connected");
 
   connectedParam_ = ecmcAsynPort->addNewAvailParam(
                                           paramName.c_str(),     // name

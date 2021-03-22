@@ -1,0 +1,8 @@
+record(ai,"$(P)CAN${CH_ID}-${suffix=}"){
+  field(DESC, "SDO error code")
+  field(PINI, "$(PINI=1)")
+  field(VAL,  "0")
+  field(DTYP, "asynInt32")
+  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))T_SMP_MS=$(T_SMP_MS=1000)/TYPE=asynInt32/plugin.can.dev${DEV_ID}.pdo.${source=value}.error?")
+  field(SCAN, "I/O Intr")
+}

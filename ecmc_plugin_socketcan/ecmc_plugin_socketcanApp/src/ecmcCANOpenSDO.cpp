@@ -251,7 +251,6 @@ void ecmcCANOpenSDO::execute() {
       if(dbgMode_) {
         printf("STATE = READ_REQ_TRANSFER %s\n",name_);
       }
-      // IMPORTANT!! LOCKLOCK!!!! LOCK all slave trafic while 0x583 and 0x603 for any other trafic while processing
       //initiate
       recivedBytes_ = 0;
       readStates_ = READ_WAIT_FOR_CONF;
@@ -287,7 +286,7 @@ void ecmcCANOpenSDO::newRxFrame(can_frame *frame) {
   else { // Write
     errorCode = writeDataStateMachine(frame);
   }
-  if(errorCode && errorCode_ != errorCode) {
+  if(errorCode && (errorCode_ != errorCode)) {
     errorCode_ = errorCode;
     refreshNeeded_ = 1;    
   }
@@ -615,7 +614,7 @@ void ecmcCANOpenSDO::initAsyn() {
 
   // Add resultdata "plugin.can.dev%d.error"
   paramName = ECMC_PLUGIN_ASYN_PREFIX + std::string(".dev") + 
-              to_string(nodeId_) + ".sdo" /*+ to_string(objIndex_)*/ + std::string(".error");
+              to_string(nodeId_) + ".sdo" + "." + std::string(name_) + std::string(".error");
 
   errorParam_ = ecmcAsynPort->addNewAvailParam(
                                           paramName.c_str(),     // name

@@ -1,0 +1,21 @@
+record(ai,"$(P)CAN-Stat-ComErr"){
+  field(DESC, "Communication error")
+  field(PINI, "$(PINI=1)")
+  field(VAL,  "0")
+  field(DTYP, "asynInt32")
+  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))T_SMP_MS=$(T_SMP_MS=1000)/TYPE=asynInt32/plugin.can.com.error?")
+  field(SCAN, "I/O Intr")
+}
+
+record(bi,"$(P)CAN-Stat-Connected"){
+  field(DESC, "Connected")
+  field(PINI, "$(PINI=1)")
+  field(VAL,  "0")
+  field(DTYP, "asynInt32")
+  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))T_SMP_MS=$(T_SMP_MS=1000)/TYPE=asynInt32/plugin.can.com.connected?")
+  field(SCAN, "I/O Intr")
+  field(ZNAM, "Not connected")
+  field(ONAM, "Connected")
+  field(ZSV,  "MAJOR")
+  field(OSV,  "NO_ALARM")
+}
