@@ -63,6 +63,8 @@ class ecmcCANOpenDevice {
   uint32_t getNodeId();             
  protected:
   int validateFrame(can_frame *frame);
+  int checkNMT(can_frame *frame);
+
   ecmcSocketCANWriteBuffer *writeBuffer_;
   uint32_t nodeId_;   // with cobid
   int exeSampleTimeMs_;
@@ -76,6 +78,14 @@ class ecmcCANOpenDevice {
   ecmcCANOpenSDO *sdos_[ECMC_CAN_DEVICE_SDO_MAX_COUNT];
   bool isMaster_;
   std::atomic_flag sdo1Lock_;
+  ecmc_nmt_state_act  nmtState_;
+  ecmc_nmt_state_act  nmtStateOld_;
+
+  //ASYN
+  void initAsyn();
+  ecmcAsynDataItem *nmtActParam_;
+
+  std::string to_string(int value);
 };
 
 #endif  /* ECMC_CANOPEN_DEVICE_H_ */

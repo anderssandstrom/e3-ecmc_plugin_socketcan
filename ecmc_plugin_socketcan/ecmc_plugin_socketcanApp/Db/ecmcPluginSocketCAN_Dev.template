@@ -1,0 +1,53 @@
+
+# Device NMT state
+
+#enum ecmc_nmt_state_act {
+#    NMT_NOT_VALID = 0,
+#    NMT_BOOT_UP   = 1,
+#    NMT_STOPPED   = 2,
+#    NMT_OP        = 3,
+#    NMT_PREOP     = 4
+#};
+# plugin.can.dev0.nmtstate
+
+record(mbbi,"$(P)CAN${CH_ID}-Stat-NMT"){
+  field(DESC, "Device NMT state")
+  field(PINI, "$(PINI=1)")
+  field(VAL,  "0")
+  field(DTYP, "asynUInt32Digital")
+  field(INP,  "@asynMask($(PORT),$(ADDR=0),$(MASK=0xFFFFFFFF),$(TIMEOUT=1))T_SMP_MS=$(T_SMP_MS=1000)/TYPE=asynUInt32Digital/plugin.can.dev${DEV_ID}.nmtstate?")
+  field(SCAN, "I/O Intr")
+  field(TSE,  "$(TSE=-2)")
+  field(ZRST,"NMT_NOT_VALID")
+  field(ONST,"NMT_BOOT_UP")
+  field(TWST,"NMT_STOPPED")
+  field(THST,"NMT_OP")
+  field(FRST,"NMT_PREOP")
+  field(FVST,"NMT_NOT_VALID")
+  field(SXST,"NMT_NOT_VALID")
+  field(SVST,"NMT_NOT_VALID")
+  field(EIST,"NMT_NOT_VALID")
+  field(NIST,"NMT_NOT_VALID")
+  field(TEST,"NMT_NOT_VALID")
+  field(ELST,"NMT_NOT_VALID")
+  field(TVST,"NMT_NOT_VALID")
+  field(TTST,"NMT_NOT_VALID")
+  field(FTST,"NMT_NOT_VALID")    
+  field(FFST,"NMT_NOT_VALID")    
+  field(ZRVL,"0x0")
+  field(ONVL,"0x1")
+  field(TWVL,"0x2")
+  field(THVL,"0x3")
+  field(FRVL,"0x4")
+  field(FVVL,"0x5")
+  field(SXVL,"0x6")
+  field(SVVL,"0x7")
+  field(EIVL,"0x8")
+  field(NIVL,"0x9")
+  field(TEVL,"0xA")
+  field(ELVL,"0xB")
+  field(TVVL,"0xC")
+  field(TTVL,"0xD")
+  field(FTVL,"0xE")    
+  field(FFVL,"0xF")
+}

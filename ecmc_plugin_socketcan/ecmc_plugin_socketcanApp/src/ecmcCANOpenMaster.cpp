@@ -40,6 +40,13 @@ ecmcCANOpenMaster::ecmcCANOpenMaster(ecmcSocketCANWriteBuffer* writeBuffer,
   syncSampleTimeMs_  = syncSampleTimeMs;
   heartSampleTimeMs_ = heartSampleTimeMs;
 
+  // Master is always in OP
+  if(nmtActParam_) {
+    nmtState_        = NMT_OP;
+    nmtStateOld_     = NMT_OP;
+    nmtActParam_->refreshParam(1);
+  }
+
   int errorCode = 0;
 
   // lssPdo_ = new ecmcCANOpenPDO( writeBuffer_, 0x7E5,DIR_WRITE,0,0,1000,exeSampleTimeMs_,"lss", cfgDbgMode_);

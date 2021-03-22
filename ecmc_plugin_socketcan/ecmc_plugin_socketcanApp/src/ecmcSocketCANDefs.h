@@ -18,9 +18,15 @@
 #define ECMC_PLUGIN_IF_OPTION_CMD          "IF="
 #define ECMC_PLUGIN_CONNECT_OPTION_CMD     "CONNECT="
 
+#define ECMC_CANOPEN_NMT_BASE              0x700
+#define ECMC_CANOPEN_NMT_BOOT              0x0
+#define ECMC_CANOPEN_NMT_STOP              0x4
+#define ECMC_CANOPEN_NMT_OP                0x5
+#define ECMC_CANOPEN_NMT_PREOP             0x7F
+
 #define ECMC_SDO_REPLY_TIMOUT_MS           200
 
-#define ECMC_PLUGIN_ASYN_PREFIX      "plugin.can"
+#define ECMC_PLUGIN_ASYN_PREFIX            "plugin.can"
 
 enum ecmc_can_direction {
     DIR_WRITE = 1,
@@ -30,13 +36,22 @@ enum ecmc_read_states {
     READ_IDLE,
     READ_REQ_TRANSFER,
     READ_WAIT_FOR_CONF,
-    READ_WAIT_FOR_DATA};
+    READ_WAIT_FOR_DATA
+};
 
 enum ecmc_write_states {
     WRITE_IDLE,
     WRITE_REQ_TRANSFER,
     WRITE_WAIT_FOR_CONF,
     WRITE_DATA,
+};
+
+enum ecmc_nmt_state_act {
+    NMT_NOT_VALID = 0,
+    NMT_BOOT_UP   = 1,
+    NMT_STOPPED   = 2,
+    NMT_OP        = 3,
+    NMT_PREOP     = 4
 };
 
 struct ODIndexBytes {
