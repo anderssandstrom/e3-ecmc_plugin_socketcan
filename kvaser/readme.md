@@ -27,6 +27,7 @@ Note: Non patched source downladed from kvaser will not work with kernel 3.10. S
 Read the README file in kvaser driver.
 These commands are from that README:
 ```
+# UNPLUGG KVASER USB DEVICE FIRST
 $ sudo make uninstall
 $ make
 $ sudo make install
