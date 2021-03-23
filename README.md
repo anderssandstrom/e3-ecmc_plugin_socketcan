@@ -55,6 +55,9 @@ Issueing "ecmcCANOpenAddMaster -h" in the iocsh you will get the following help 
 Example to add a master with LSS, sync, heartbeat sample time of 1s:
 ``` 
 ecmcCANOpenAddMaster("ecmcCANOpenMaster",0,1000,1000,1000)
+
+# Load status records for device
+dbLoadRecords(ecmcPluginSocketCAN_Dev.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,CH_ID=00,DEV_ID=0")
 ``` 
 
 Note:: You can only have one master in each ioc (one call to "ecmcCANOpenAddMaster").
@@ -73,6 +76,9 @@ Issueing "ecmcCANOpenAddDevice -h" in the iocsh you will get the following help 
 Example to add a device with node id 3 and a NMT heartbeat timeout of 3s:
 ``` 
 ecmcCANOpenAddDevice("testDevice",3,3000)
+
+# Load status records for device
+dbLoadRecords(ecmcPluginSocketCAN_Dev.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,CH_ID=03,DEV_ID=3")
 ``` 
 
 Note:: You can only use the below commands (ecmcCANOpenAddSDO and ecmcCANOpenAddODO) to nodes of an existing device or master.
@@ -98,11 +104,21 @@ A few examples:
 ``` 
 # Example read SDO from device, will be cyclically read at an intervall of 7000ms:
 ecmcCANOpenAddSDO("analogValues",3,0x583,0x603,2,0x2640,0x0,56,7000)
+
+# Load record for SDO data
 dbLoadRecords(ecmcPluginSocketCAN_SDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=AI03-Array,source=basicConfig,DTYP=asynInt8ArrayIn,FTVL=CHAR,NELM=7")
+
+# Load record for SDO error
+dbLoadRecords(ecmcPluginSocketCAN_SDO_error.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=03,DEV_ID=3,suffix=SDO01-AnalogValuesErr,source=analogValues")
 
 # Example write SDO to device, will be written on demand (when write data from epics):
 ecmcCANOpenAddSDO("basicConfig",3,0x583,0x603,1,0x2690,0x1,7,0)
+
+# Load record for SDO data
 dbLoadRecords(ecmcPluginSocketCAN_SDO_output.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=BasicConfig,source=basicConfig,DTYP=asynInt8ArrayOut,FTVL=CHAR,NELM=7")
+
+# Load record for SDO error
+dbLoadRecords(ecmcPluginSocketCAN_SDO_error.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=03,DEV_ID=3,suffix=SDO02-BasicConfigErr,source=basicConfig")
 
 ``` 
 ## ecmcCANOpenAddPDO
@@ -125,8 +141,141 @@ An example:
 ``` 
 # Read PDO, if not recived pdo within 10s the PDO object will go into error state:
 ecmcCANOpenAddPDO("status",3,0x183,2,8,10000,0)
+
+# Load record for PDO data
 dbLoadRecords(ecmcPluginSocketCAN_PDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},NELM=${NELM=1},CH_ID=03,DEV_ID=3,suffix=PDO01-Array,source=status,NELM=8")
+
+# Load record for PDO error
+dbLoadRecords(ecmcPluginSocketCAN_PDO_error.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=03,DEV_ID=3,suffix=PDO01-StatusErr,source=status")
+
 ``` 
+
+# PVs
+
+## Communication
+
+The status of the CAN communication can be supervised by loading the "ecmcPluginSocketCAN_Com.template":
+
+``` 
+dbLoadRecords(ecmcPluginSocketCAN_Com.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1")
+
+# Will load:
+IOC_TEST:CAN-Stat-ComErr
+IOC_TEST:CAN-Stat-Connected
+``` 
+The Connected Pv show if the plugin is connected to socketcan and the hardware.
+The ComErr Pv shows error codes for reads and writes to socketcan socket.
+
+## Device (also Master)
+
+### ecmcPluginSocketCAN_Dev.template
+
+The ecmcPluginSocketCAN_Dev.template loads a NMT PV:
+``` 
+IOC_TEST:CAN03-Stat-NMT
+``` 
+The PV tells wich state the device is in and can have the following values:
+*  NMT_NOT_VALID : State not valid. Something is wrong.
+
+*  NMT_BOOT_UP : Device is booting
+
+*  NMT_STOPPED : Device is stopped
+
+*  NMT_OP : Device is operational (this is the normal state when running the ioc). 
+
+*  NMT_PREOP : Device is in pre operational state
+
+
+## PDO
+
+## ecmcPluginSocketCAN_PDO_input.template
+
+The ecmcPluginSocketCAN_PDO_intput.template in used for input PDOS (data read from a device device to EPICS).
+The template only contains one PV that holds the data:
+
+Example:
+``` 
+dbLoadRecords(ecmcPluginSocketCAN_PDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=03,DEV_ID=3,suffix=PDO01-Status_,source=status,NELM=8")
+
+# Loads this PV:
+IOC_TEST:CAN03-PDO01-Status_
+``` 
+The data PV is an waveform of type uchar and length NELM.
+
+## ecmcPluginSocketCAN_PDO_output.template
+
+The ecmcPluginSocketCAN_PDO_output.template in used for output PDOS (data written from EPICS to device).
+The template only contains one PV that holds the data:
+
+Example:
+``` 
+dbLoadRecords(ecmcPluginSocketCAN_PDO_output.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=00,DEV_ID=0,suffix=PDO01-Reset_,  source=reset,NELM=8")
+
+# Loads this PV:
+IOC_TEST:CAN03-PDO01-Reset_
+``` 
+The data PV is an waveform of type uchar and length NELM.
+
+
+## ecmcPluginSocketCAN_PDO_error.template
+
+The ecmcPluginSocketCAN_PDO_error.template in used to read the PDO error code.
+
+Example:
+``` 
+dbLoadRecords(ecmcPluginSocketCAN_PDO_error.template,  "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=00,DEV_ID=0,suffix=PDO01-ResetErr,source=reset")
+
+# Loads this PV:
+IOC_TEST:CAN03-PDO01-ResetErr
+``` 
+
+An error could for example be that the PDO data have not been recived within the correct time frame (readTimeoutMs).
+The PDO is in error state if the error code is not 0.
+
+## SDO
+
+## ecmcPluginSocketCAN_SDO_input.template
+
+The ecmcPluginSocketCAN_SDO_intput.template in used for input SDOS (data read from a device device to EPICS).
+The template only contains one PV that holds the data:
+
+Example:
+``` 
+dbLoadRecords(ecmcPluginSocketCAN_SDO_input.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=03,DEV_ID=3,suffix=SDO01-AnalogValues_,  source=analogValues,DTYP=asynInt16ArrayIn,FTVL=SHORT,NELM=28")
+
+# Loads this PV:
+IOC_TEST:CAN03-SDO01-AnalogValues_
+``` 
+The data PV is an waveform of type uchar and length NELM.
+
+## ecmcPluginSocketCAN_SDO_output.template
+
+The ecmcPluginSocketCAN_SDO_output.template in used for output SDOS (data written from EPICS to device).
+The template only contains one PV that holds the data:
+
+Example:
+``` 
+dbLoadRecords(ecmcPluginSocketCAN_SDO_output.template,"P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=03,DEV_ID=3,suffix=SDO02-BasicConfig_,  source=basicConfig,DTYP=asynInt8ArrayOut,FTVL=UCHAR,NELM=7")
+
+# Loads this PV:
+IOC_TEST:CAN03-SDO02-BasicConfig_
+``` 
+The data PV is an waveform of type uchar and length NELM.
+
+## ecmcPluginSocketCAN_SDO_error.template
+
+The ecmcPluginSocketCAN_PSO_error.template in used to read the SDO error code.
+
+Example:
+``` 
+dbLoadRecords(ecmcPluginSocketCAN_SDO_error.template, "P=${ECMC_PREFIX},PORT=${ECMC_ASYN_PORT},ADDR=0,TIMEOUT=1,T_SMP_MS=${ECMC_SAMPLE_RATE_MS},TSE=${ECMC_TSE},CH_ID=03,DEV_ID=3,suffix=SDO02-BasicConfigErr,source=basicConfig")
+
+# Loads this PV:
+IOC_TEST:CAN03-SDO02-BasicConfigErr
+``` 
+
+An error could for example be that the SDO data have not been recived within the correct time frame or slave is not reposning like it should.
+The SDO is in error state if the error code is not 0.
 
 # Plugin
 
