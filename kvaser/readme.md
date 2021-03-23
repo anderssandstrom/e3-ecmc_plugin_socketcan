@@ -36,7 +36,7 @@ $ sudo make uninstall
 $ make
 $ sudo make install
 ```
-## Kernel > 4.x
+## Kernel version >= 4.x
 Go to kvaser webpage and download kvaser socket can drivers. Install according to instructions.
 
 
