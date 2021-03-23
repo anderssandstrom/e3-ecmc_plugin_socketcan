@@ -16,7 +16,7 @@ The current implemented features are:
 
 * Simple master:
 
-    * Simple LSS
+    * LSS (basic)
 
     * Heartbeat
 
