@@ -37,7 +37,7 @@ $ make
 $ sudo make install
 ```
 ## Kernel > 4.x
-Go to kvaser webpage and download kvaser socket can drivers. Install according to imstructions.
+Go to kvaser webpage and download kvaser socket can drivers. Install according to instructions.
 
 
 ## Start services and configure interface
