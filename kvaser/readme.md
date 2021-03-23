@@ -2,6 +2,8 @@
 
 ## Kernel 3.10
 
+The sources socketcan drivers downloadable from kvaser webpage will not work for kernel 3.10 but a pathed version can be used.
+
 ### Pre reqs
 
 Install kernel headers
@@ -13,7 +15,9 @@ Note: make sure that correct kernel headers are installed for the current kernel
 ### Install kvaser driver
 
 #### Use the correct source
+
 Goto kvasser dir and untar the file: socketcan_kvaser_drivers_patch_asm_3.10.tar.gz
+The "socketcan_kvaser_drivers_patch_asm_3.10.tar.gz" contains a pathed version of the kvaser socket can drivers were  functionality not availbale in kernel 3.10 have been removed.
 
 NOTE: This source will only work for Kvaser leaf light v2 usb. It will not work for Kvaser Hydra.
 ``` 
@@ -21,7 +25,7 @@ cd kvaser
 tar -xvf socketcan_kvaser_drivers_patch_asm_3.10.tar.gz 
 cd socketcan_kvaser_drivers/
 ``` 
-Note: Non patched source downladed from kvaser will not work with kernel 3.10. So use the source in kvaser dir of this repo. 
+Note: Non patched source downladed from kvaser will not work with kernel 3.10. So use the source in kvaser dir of this repo.
 
 #### make 
 Read the README file in kvaser driver.
@@ -32,6 +36,9 @@ $ sudo make uninstall
 $ make
 $ sudo make install
 ```
+## Kernel > 4.x
+Go to kvaser webpage and download kvaser socket can drivers. Install according to imstructions.
+
 
 ## Try start services and configure interface
 
