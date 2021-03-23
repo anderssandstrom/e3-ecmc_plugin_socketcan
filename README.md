@@ -40,7 +40,7 @@ These functionalities are configured through iocsh cmds:
 
 ## Link to hardware
 
-This module have only been tested with Kvaser Leaf 2 usb can interface. 
+This module have been tested with Kvaser Leaf Light v2 usb can interface. 
 More info about how to setup this hardware can be found here:
 
 [Kvaser Leaf V2 setup](kvaser/readme.md)
