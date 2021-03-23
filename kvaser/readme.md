@@ -2,7 +2,7 @@
 
 ## Kernel 3.10
 
-The sources socketcan drivers downloadable from kvaser webpage will not work for kernel 3.10 but a pathed version can be used.
+The socketcan drivers sources downloadable from kvaser webpage will not work for kernel 3.10 but a pathed version can be used.
 
 ### Pre reqs
 
