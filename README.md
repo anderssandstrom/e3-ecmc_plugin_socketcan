@@ -2,7 +2,7 @@ e3-ecmc_plugin_socketcan
 ======
 ESS Site-specific EPICS module : ecmcPlugin_socketcan
 
-# ScoketCAN
+# SocketCAN
 
 This module adds some CAN support to ecmc based on SocketCAN:
 https://en.wikipedia.org/wiki/SocketCAN
@@ -38,6 +38,12 @@ These functionalities are configured through iocsh cmds:
 
 * ecmcCANOpenAddPDO
 
+## Link to hardware
+
+This module have only been tested with Kvaser Leaf 2 usb can interface. 
+More info about how to setup this hardware can be found here:
+
+[Kvaser Leaf V2 setup](kvaser/readme.md)
 
 ## ecmcCANOpenAddMaster
 
