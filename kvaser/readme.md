@@ -10,7 +10,7 @@ Install kernel headers
 ```
 sudo yum install kernel-devel
 ```
-Note: make sure that correct kernel headers are installed for the current kernel, otheerwise maybe a update is needed.
+Note: make sure that correct kernel headers are installed for the current kernel, otherwise maybe a update is needed.
 
 ### Install kvaser driver
 
