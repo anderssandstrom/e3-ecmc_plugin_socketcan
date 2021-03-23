@@ -40,7 +40,7 @@ $ sudo make install
 Go to kvaser webpage and download kvaser socket can drivers. Install according to imstructions.
 
 
-## Try start services and configure interface
+## Start services and configure interface
 
 Start services:
 ```
@@ -52,6 +52,9 @@ $ sudo ip link set can0 type can bitrate 125000   # 125000 is bitrate (works for
 $ sudo ip link set up can0
 ``` 
 Now you should see the can0 interface, test with "ip addr"
+
+
+
 
 
 
