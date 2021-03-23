@@ -1,4 +1,4 @@
-# Use Kvaser leaf light v2
+# Use Kvaser Leaf Light v2
 
 ## Kernel 3.10
 
