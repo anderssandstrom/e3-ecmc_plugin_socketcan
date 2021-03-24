@@ -1,6 +1,6 @@
 ## History
-Kavser does not support socketcan for kernel 3.10.
-However the Kavser support supllied a custom driver for Kernel 3.10 for testing. 
+Kvaser does not support socketcan for kernel 3.10.
+However, Kvaser support supplied a custom driver for Kernel 3.10 for testing. 
 
 ## Files
 In this dir you will find two files:
