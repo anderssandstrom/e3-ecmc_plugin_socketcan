@@ -47,9 +47,10 @@ $ sudo make install
 
 Note: You will get some warnings from hydra source but like stated above the hydra hw or driver is NOT supported and should be avoided. So basically this driver ONLY supports the Kvaser Leaf Light v2.
 
-##  DMESG Connect/Disconnect
+##  DMESG 
 
-Seems to be something wrong when disconnecting/deregistering the USB:
+### Connect Kvaser Leaf Light v2 USB
+
 ```
 ##########################################################################
 dmesg using newest Kvaser socketcan_kvaser_drivers patched and added can_change_state()
@@ -62,22 +63,25 @@ Connecting leaf to usb:
 [  +0.000002] usb 1-2: Manufacturer: Kvaser AB
 [  +0.034801] usbcore: registered new interface driver kvaser_usb
 
-Can intreface is now visible with ip addr:
+Can interface is now visible with ip addr:
 
 ip addr
 8: can0: <NOARP,ECHO> mtu 16 qdisc noop state DOWN group default qlen 10
     link/can 
 
 And the interface is working!
+```
+### Disconnect Kvaser Leaf Light v2 USB
 
-Disconnecting leaf from usb:
+Seems to be something wrong when disconnecting/deregistering the USB:
+```
+# Disconnecting leaf from usb:
 [Mar24 10:31] usb 1-2: USB disconnect, device number 8
 [  +0.000050] kvaser_usb 1-2:1.0 can0: Cannot flush queue, error -19
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot reset card, error -19
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot stop device, error -19
-
-Get the above error at disconnect of usb
 ```
+Need to look into why..
 
 ## Kernel version >= 4.x
 Go to kvaser webpage and download kvaser socket can drivers. Install according to instructions.
