@@ -203,9 +203,19 @@ void ecmcSocketCAN::doReadWorker() {
     }
     // Wait for new CAN frame 
     int bytes = read(socketId_, &rxmsg_, sizeof(rxmsg_));
+    
+    // error in read()
     if(bytes == -1) {
-      errorCode_ = errno;      
-      printf("ecmcSocketCAN: read() fail with error %s.\n", strerror(errno));      
+      errorCode_ = errno;
+      printf("ecmcSocketCAN: read() fail with error: %s, (0x%x).\n", strerror(errno),errno);
+      refreshNeeded_ = 1;
+      continue;
+    }
+
+    // incomplete read()
+    if(bytes != sizeof(rxmsg_)) {
+      printf("ecmcSocketCAN: read() fail with error: Incomplete read, not a full can frame (0x%x).\n",ECMC_CAN_ERROR_READ_INCOMPLETE);
+      errorCode_ = ECMC_CAN_ERROR_READ_INCOMPLETE;
       refreshNeeded_ = 1;
       continue;
     }

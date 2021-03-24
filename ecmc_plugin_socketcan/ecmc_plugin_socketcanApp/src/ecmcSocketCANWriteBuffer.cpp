@@ -185,12 +185,14 @@ int ecmcSocketCANWriteBuffer::writeCAN(can_frame *frame){
 
   // Maybe need to add the size to write here.. if struct is not full, hmm?!
   int nbytes = write(socketId_, frame, sizeof(struct can_frame));
+
   if(nbytes == -1) {    
-    printf("ecmcSocketCAN: write() fail with error %s.\n", strerror(errno));      
-    return ECMC_CAN_ERROR_WRITE_INCOMPLETE;    
+    printf("ecmcSocketCAN: write() fail with error: %s (0x%x).\n", strerror(errno),errno);
+    return errno;    
   }
   
   if (nbytes!= sizeof(struct can_frame)) {
+    printf("ecmcSocketCAN: write() fail with error: Incomplete write(), not a full can frame (0x%x).\n",ECMC_CAN_ERROR_WRITE_INCOMPLETE);    
     return ECMC_CAN_ERROR_WRITE_INCOMPLETE;
   }
 
