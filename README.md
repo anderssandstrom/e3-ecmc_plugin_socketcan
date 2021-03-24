@@ -80,6 +80,11 @@ ${SCRIPTEXEC} ${ecmccfg_DIR}loadPlugin.cmd, "PLUGIN_ID=0,FILE=${ECMC_PLUGIN_FILN
 epicsEnvUnset(ECMC_PLUGIN_FILNAME)
 epicsEnvUnset(ECMC_PLUGIN_CONFIG)
 ``` 
+
+A complete example can be found in the pmu905 repo where a R&S amplifier is interfaced using this module:
+https://github.com/anderssandstrom/ecmc_pmu905_can
+
+
 ### Access to templates
 
 In order to access the templates in the plugin a "require" is needed in the startup script:
