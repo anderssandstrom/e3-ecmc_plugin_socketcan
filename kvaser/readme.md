@@ -47,9 +47,9 @@ $ sudo make install
 
 Note: You will get some warnings from hydra source but like stated above the hydra hw or driver is NOT supported and should be avoided. So basically this driver ONLY supports the Kvaser Leaf Light v2.
 
-##  DMESG 
+###  DMESG 
 
-### Connect Kvaser Leaf Light v2 USB
+#### Connect Kvaser Leaf Light v2 USB
 
 ```
 ##########################################################################
@@ -71,7 +71,7 @@ ip addr
 
 And the interface is working!
 ```
-### Disconnect Kvaser Leaf Light v2 USB
+#### Disconnect Kvaser Leaf Light v2 USB
 
 Seems to be something wrong when disconnecting/deregistering the USB:
 ```
@@ -82,6 +82,11 @@ Seems to be something wrong when disconnecting/deregistering the USB:
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot stop device, error -19
 ```
 Need to look into why..
+
+### More info
+
+More info on other driver supplied by Kvaser can be found here:
+[Other driver (currently not working) ](obsolete/README.md)
 
 ## Kernel version >= 4.x
 Go to kvaser webpage and download kvaser socket can drivers. Install according to instructions.
