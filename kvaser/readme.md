@@ -36,27 +36,43 @@ $ sudo make uninstall
 $ make
 $ sudo make install
 ```
+
+Note: You will get some warnings from hydra source but like stated above the hydra hw or driver is NOT supported and should be avoided. So basically this driver ONLY supports the Kvaser Leaf Light v2.
+
 ## Kernel version >= 4.x
 Go to kvaser webpage and download kvaser socket can drivers. Install according to instructions.
 
 
 ## Start services and configure interface
 
+First connect the Kvaser Leaf Light v2 usb interface to the controller.
+
 Start services:
 ```
 $ sudo modprobe can_dev
 $ sudo modprobe can
 $ sudo modprobe can_raw
-#$ sudo modprobe kvaser_usb                        # not  needed, will start as soon as pluggen in
+#$ sudo modprobe kvaser_usb                       # not  needed, will start as soon as leaf is plugged in
 $ sudo ip link set can0 type can bitrate 125000   # 125000 is bitrate (works for pmu905)
 $ sudo ip link set up can0
 ``` 
 Now you should see the can0 interface, test with "ip addr"
+``` 
+ip addr
+...
+7: can0: <NOARP,UP,LOWER_UP,ECHO> mtu 16 qdisc pfifo_fast state UNKNOWN group default qlen 10
+    link/can 
+...
+``` 
 
-
-
-
-
+Check that you have the correct services running (lsmod):
+``` 
+lsmod | grep can
+can_raw                17120  0 
+can                    36567  1 can_raw
+can_dev                20760  1 kvaser_usb
+...
+``` 
 
 # OBSOLETE NOTES BELOW:
 #### 1. First test without install of driver and without kvaser leaf connected.
