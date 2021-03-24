@@ -36,6 +36,9 @@ $ sudo make uninstall
 $ make
 $ sudo make install
 ```
+
+Note: You will get some warnings from hydra source but like stated above the hydra hw or driver is NOT supported and should be avoided. So basically this driver ONLY supports the Kvaser Leaf Light v2.
+
 ## Kernel version >= 4.x
 Go to kvaser webpage and download kvaser socket can drivers. Install according to instructions.
 
