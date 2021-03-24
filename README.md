@@ -17,7 +17,11 @@ More info about how to setup this hardware can be found here:
 # Install ecmc plugin module
 
 ## Dependencies
-This module depends on ecmc and asyn.
+This module have dependencies to:
+
+1. ecmc 
+
+3. asyn
 
 ## Configuration
 Ensure that these two files are correct:
@@ -43,6 +47,47 @@ The module is installed like any other e3 module by "make install":
 make install
 ``` 
 Now the module should be ready for use.
+
+## Load plugin into ecmc
+Like all ecmc plugins the plugin must be loaded into ecmc with the "loadPlugin.cmd" command.
+The loading is needed so that ecmc can link to the callbacks, plc functions and plc constants in the plugin.
+
+The "loadPlugin.cmd" command basically takes three arguments:
+
+1. PLUGIN_ID: This is just an index of the different plugins loaded into ecmc. So the first loaded plugin should have index 0.
+
+2. FILE: Path to the "libecmc_plugin_socketcan.so" file.
+
+3. CONFIG: Plugin configuration string. See below for details
+
+### Configurations string "CONFIG"
+
+The configuration string contains startup configs for the plugin. Currentlly the below configurations can be specified in the CONFIG string:
+``` 
+DBG_PRINT=<1/0>      : Enables/disables printouts from plugin, default = disabled (=0).
+IF=<if name>         : Sets can interface (example: can0, vcan0..).
+CONNECT=<1/0>        : Auto connect to if at startup, default = autoconnect (=1).
+``` 
+Also see "Plugin" chapter below for more information about the plugin.
+ 
+### Example
+Example of loading the plugin connectimng to the "can0" interface:
+``` 
+## Load plugin:
+epicsEnvSet(ECMC_PLUGIN_FILNAME,"${HOME}/epics/base-7.0.4/require/${E3_REQUIRE_VERSION}/siteMods/ecmc_plugin_socketcan/master/lib/${EPICS_HOST_ARCH=linux-x86_64}/libecmc_plugin_socketcan.so")
+epicsEnvSet(ECMC_PLUGIN_CONFIG,"IF=can0;DBG_PRINT=0;")
+${SCRIPTEXEC} ${ecmccfg_DIR}loadPlugin.cmd, "PLUGIN_ID=0,FILE=${ECMC_PLUGIN_FILNAME},CONFIG='${ECMC_PLUGIN_CONFIG}', REPORT=1"
+epicsEnvUnset(ECMC_PLUGIN_FILNAME)
+epicsEnvUnset(ECMC_PLUGIN_CONFIG)
+``` 
+### Access to templates
+
+In order to access the templates in the plugin a "require" is needed in the startup script:
+
+``` 
+require ecmc_plugin_socketcan master
+
+``` 
 
 # CANOpen
 
