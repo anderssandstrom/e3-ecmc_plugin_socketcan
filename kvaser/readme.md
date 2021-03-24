@@ -2,7 +2,7 @@
 
 ## Kernel 3.10
 
-The socketcan drivers sources downloadable from kvaser webpage will not work for kernel 3.10 but a pathed version can be used.
+The socketcan drivers sources downloadable from kvaser webpage will not work for kernel 3.10 but a patched version can be used.
 
 ### Pre reqs
 
@@ -16,13 +16,15 @@ Note: make sure that correct kernel headers are installed for the current kernel
 
 #### Use the correct source
 
-Goto kvasser dir and untar the file: socketcan_kvaser_drivers_patch_asm_3.10.tar.gz
-The "socketcan_kvaser_drivers_patch_asm_3.10.tar.gz" contains a pathed version of the kvaser socket can drivers were  functionality not availbale in kernel 3.10 have been removed.
+Goto kvasser dir and untar the file: socketcan_kvaser_drivers_1.6.113_patch_asm_3.10.tar.gz
 
-NOTE: This source will only work for Kvaser leaf light v2 usb. It will not work for Kvaser Hydra.
+The "socketcan_kvaser_drivers_1.6.113_patch_asm_3.10.tar.gz" contains a pathed version of the kvaser socketcan 1.6.113 drivers were functionality not availbale in kernel 3.10 have been removed. For the driver for the Leaf Light v2 this includes basically removing CAN FD support and also a function called "can_change_state()" which is not avilabe in the 3.10 kernel.
+Kvaser support provided the sources for "can_change_state()" so that have been added to kvaser_usb_leaf.c source.
+
+NOTE: This source will only work for Kvaser Leaf Light v2 usb. It will not work for Kvaser Hydra.
 ``` 
 cd kvaser
-tar -xvf socketcan_kvaser_drivers_patch_asm_3.10.tar.gz 
+tar -xvf socketcan_kvaser_drivers_1.6.113_patch_asm_3.10.tar.gz 
 cd socketcan_kvaser_drivers/
 ``` 
 Note: Non patched source downladed from kvaser will not work with kernel 3.10. So use the source in kvaser dir of this repo.
