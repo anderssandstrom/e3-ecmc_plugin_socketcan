@@ -14,6 +14,35 @@ More info about how to setup this hardware can be found here:
 
 [Kvaser Leaf V2 setup](kvaser/readme.md)
 
+# Install ecmc plugin module
+
+## Dependencies
+This module depends on ecmc and asyn.
+
+## Configuration
+Ensure that these two files are correct:
+
+1.  configure/CONFIG_MODULE:
+``` 
+EPICS_MODULE_TAG:=master
+E3_MODULE_VERSION:=master
+ECMC_DEP_VERSION:=6.3.2
+ASYN_DEP_VERSION:=4.41.0
+``` 
+
+2.  configure/RELEASE:
+``` 
+EPICS_BASE:=${HOME}/epics/base-7.0.4
+E3_REQUIRE_VERSION:=3.4.0
+``` 
+
+## Install
+
+The module is installed like any other e3 module by "make install":
+``` 
+make install
+``` 
+Now the module should be ready for use.
 
 # CANOpen
 
