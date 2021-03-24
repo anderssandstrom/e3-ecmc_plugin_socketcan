@@ -71,7 +71,7 @@ CONNECT=<1/0>        : Auto connect to if at startup, default = autoconnect (=1)
 Also see "Plugin" chapter below for more information about the plugin.
  
 ### Example
-Example of loading the plugin connectimng to the "can0" interface:
+Example of loading the plugin connecting to the "can0" interface:
 ``` 
 ## Load plugin:
 epicsEnvSet(ECMC_PLUGIN_FILNAME,"${HOME}/epics/base-7.0.4/require/${E3_REQUIRE_VERSION}/siteMods/ecmc_plugin_socketcan/master/lib/${EPICS_HOST_ARCH=linux-x86_64}/libecmc_plugin_socketcan.so")
