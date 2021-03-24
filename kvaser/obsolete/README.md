@@ -36,7 +36,7 @@ Disconnecting leaf from usb:
 
 ## CONCLUSION
 
-Use file "kvaser/socketcan_kvaser_drivers_patch_asm_3.10.tar.gz"
+Use file "kvaser/socketcan_kvaser_drivers_1.6.113_patch_asm_3.10.tar.gz"
 This file contains a patched version of the newest Kvaser socketcan drivers. 
 Basically everything that did not compile was removed, mostly related to CAN FD. A function can_change_state() was also not availble in kernel 3.10. Kvaser support supplied a can_change_state() which have been added to the code.
 
