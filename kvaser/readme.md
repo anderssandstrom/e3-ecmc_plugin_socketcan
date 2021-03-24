@@ -51,11 +51,10 @@ Note: You will get some warnings from hydra source but like stated above the hyd
 
 #### Connect Kvaser Leaf Light v2 USB
 
-```
-##########################################################################
-dmesg using newest Kvaser socketcan_kvaser_drivers patched and added can_change_state()
+dmesg using newest Kvaser socketcan_kvaser_drivers patched and added "can_change_state()" (socketcan_kvaser_drivers_1.6.113_patch_asm_3.10.tar.gz):
 
-Connecting leaf to usb:
+```
+# Connecting leaf to usb:
 [Mar24 11:26] usb 1-2: new high-speed USB device number 11 using xhci_hcd
 [  +0.126349] usb 1-2: New USB device found, idVendor=0bfd, idProduct=0120, bcdDevice= 0.01
 [  +0.000003] usb 1-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
@@ -69,8 +68,9 @@ ip addr
 8: can0: <NOARP,ECHO> mtu 16 qdisc noop state DOWN group default qlen 10
     link/can 
 
-And the interface is working!
 ```
+The interface is working and communication to can slave are possible.
+
 #### Disconnect Kvaser Leaf Light v2 USB
 
 Seems to be something wrong when disconnecting/deregistering the USB:
@@ -81,7 +81,7 @@ Seems to be something wrong when disconnecting/deregistering the USB:
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot reset card, error -19
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot stop device, error -19
 ```
-Need to look into why..
+Need to look into why.. Have contacted Kvaser support.
 
 ### More info
 
