@@ -75,6 +75,7 @@ Disconnecting leaf from usb:
 
 ``` 
 These error messages are normal when the usb is unplugged while link is up (confirmed with kvaser support).
+
 So conclusion is that use of kvaser/socketcan_kvaser_drivers_1.6.113_patch_asm_3.10.tar.gz is the only way to make it work under kernel 3.10.
 According to Kvaser support this approach is OK and should work just fine.
 
