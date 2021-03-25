@@ -73,7 +73,7 @@ The interface is working and communication to can slave are possible.
 
 #### Disconnect Kvaser Leaf Light v2 USB
 
-Seems to be something wrong when disconnecting/deregistering the USB:
+The following errors will appear in dmesg if unplugging the device while link is up.
 ```
 # Disconnecting leaf from usb:
 [Mar24 10:31] usb 1-2: USB disconnect, device number 8
@@ -81,7 +81,9 @@ Seems to be something wrong when disconnecting/deregistering the USB:
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot reset card, error -19
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot stop device, error -19
 ```
-Need to look into why.. Have contacted Kvaser support.
+
+Checked with kvaser support and this is normal when unplugging the usb when the the link is up. So this is not an Issue.
+
 
 ### More info
 
