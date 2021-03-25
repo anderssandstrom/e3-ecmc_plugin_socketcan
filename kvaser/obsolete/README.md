@@ -72,7 +72,6 @@ Disconnecting leaf from usb:
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot reset card, error -19
 [  +0.000002] kvaser_usb 1-2:1.0 can0: Cannot stop device, error -19
 
-Get the above error at disconnect of usb
-
 
 ``` 
+These error messages are normal when the usb is unplugged while link is up (confirmed with kvaser support).
