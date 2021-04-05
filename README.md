@@ -104,7 +104,7 @@ The current implemented features are:
 
     * LSS (basic)
 
-    * Heartbeat
+    * NMT (Heartbeat)
 
     * Sync
 
