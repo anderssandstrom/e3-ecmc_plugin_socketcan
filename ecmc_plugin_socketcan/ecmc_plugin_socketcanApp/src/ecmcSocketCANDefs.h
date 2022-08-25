@@ -24,7 +24,7 @@
 #define ECMC_CANOPEN_NMT_OP                0x5
 #define ECMC_CANOPEN_NMT_PREOP             0x7F
 
-#define ECMC_SDO_REPLY_TIMOUT_MS           200
+#define ECMC_SDO_REPLY_TIMOUT_MS           1000
 
 #define ECMC_PLUGIN_ASYN_PREFIX            "plugin.can"
 
