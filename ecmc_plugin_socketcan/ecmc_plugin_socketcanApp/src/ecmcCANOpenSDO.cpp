@@ -539,13 +539,15 @@ int ecmcCANOpenSDO::writeValue() {
 int ecmcCANOpenSDO::tryLockSdo1() {
   epicsMutexLock(getLockMutex_);
   if(busy_) {
+    epicsMutexUnlock(getLockMutex_);
     return 0;
   }
 
   bool prevLock = ptrSdo1Lock_->test_and_set();
   if(prevLock) {
     // wait for busy to go down
-   return 0;
+    epicsMutexUnlock(getLockMutex_);
+    return 0;
   }
 
   busy_ = true;
